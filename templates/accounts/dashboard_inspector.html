@@ -3,43 +3,53 @@
 {% block title %}Inspector dashboard — InspectIQ{% endblock %}
 
 {% block content %}
-<h1>Inspector dashboard</h1>
-<p>Welcome, {{ request.user.email }}.</p>
-
-<div class="mt-4">
-    <a href="{% url 'stores:add' %}" class="btn btn-primary">Add store</a>
-    <a href="{% url 'stores:list' %}" class="btn btn-outline-secondary">View all stores</a>
-    <a href="{% url 'inspections:schedule' %}" class="btn btn-primary">Schedule inspection</a>
-</div>
-
-<h2 class="mt-4">Scheduled inspections</h2>
 {% if inspections %}
-<table class="table">
-    <thead>
-        <tr>
-            <th>Store</th>
-            <th>When</th>
-            <th>Status</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+<header class="iq-page-head">
+    <h1>Today</h1>
+    <a href="{% url 'inspections:schedule' %}" class="btn btn-primary">Schedule inspection</a>
+</header>
+
+<ul class="iq-queue">
     {% for inspection in inspections %}
-        <tr>
-            <td>{{ inspection.store.name }}</td>
-            <td>{{ inspection.scheduled_for|date:"Y-m-d H:i" }}</td>
-            <td>{{ inspection.get_status_display }}</td>
-            <td>
-                {% if inspection.status == "SCHEDULED" %}
-                <a href="{% url 'inspections:conduct' inspection.pk %}"
-                   class="btn btn-sm btn-outline-primary">Conduct</a>
-                {% endif %}
-            </td>
-        </tr>
+    <li>
+        <div class="iq-queue__site">
+            <p class="iq-queue__store">{{ inspection.store.name }}</p>
+            <p class="iq-queue__address">{{ inspection.store.address|linebreaksbr }}</p>
+        </div>
+        <span class="iq-queue__when">{{ inspection.scheduled_for|date:"Y-m-d H:i" }}</span>
+        <span class="iq-queue__status">{{ inspection.get_status_display }}</span>
+        <span class="iq-queue__action">
+            {% if inspection.status == "SCHEDULED" %}
+                <a href="{% url 'inspections:conduct' inspection.pk %}" class="btn btn-outline-primary btn-sm">Conduct</a>
+            {% else %}
+                {% comment %}
+                    Story 9 replaces this marker with the submit action.
+                    An IN_PROGRESS inspection has no way to reach COMPLETED
+                    today — transitions.py has only the SCHEDULED to
+                    IN_PROGRESS entry. Story 9 adds the IN_PROGRESS to
+                    COMPLETED transition, a correction deadline, and
+                    Ticket creation. Whether the submit control lives here
+                    or on the conduct form is Story 9's decision; if it
+                    lives here, replace this marker with a button to the
+                    submit view.
+                {% endcomment %}
+                <span class="iq-queue__done">Recorded</span>
+            {% endif %}
+        </span>
+    </li>
     {% endfor %}
-    </tbody>
-</table>
+</ul>
 {% else %}
-<p class="text-muted">No inspections scheduled yet.</p>
+<h1>Today</h1>
+<div class="iq-empty">
+    <p class="iq-empty__headline">No inspections on the queue.</p>
+    <a href="{% url 'inspections:schedule' %}" class="btn btn-primary iq-empty__action">Schedule inspection</a>
+</div>
 {% endif %}
+
+<p class="iq-foot-actions">
+    <a href="{% url 'stores:list' %}">View stores</a>
+    <span aria-hidden="true">·</span>
+    <a href="{% url 'stores:add' %}">Add store</a>
+</p>
 {% endblock %}

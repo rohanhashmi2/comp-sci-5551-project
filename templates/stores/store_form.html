@@ -4,15 +4,13 @@
 {% block title %}Add store — InspectIQ{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <h1 class="mb-4">Add store</h1>
-        <form method="post" novalidate>
-            {% csrf_token %}
-            {% bootstrap_form form %}
-            {% bootstrap_button "Add store" button_type="submit" button_class="btn-primary" %}
-            <a href="{% url 'stores:list' %}" class="btn btn-link">Cancel</a>
-        </form>
-    </div>
+<div class="iq-form-column">
+    <h1>Add store</h1>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        {% bootstrap_button "Add store" button_type="submit" button_class="btn-primary" %}
+        <a href="{% url 'stores:list' %}" class="btn btn-link">Cancel</a>
+    </form>
 </div>
 {% endblock %}

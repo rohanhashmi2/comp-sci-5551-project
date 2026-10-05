@@ -1,0 +1,715 @@
+/* ================================================================
+   InspectIQ — stylesheet
+   Public-health inspection software. Overrides Bootstrap 5
+   variables and adds component classes for the specific pages.
+   ================================================================ */
+
+/* --- Palette tokens -------------------------------------------- */
+
+:root {
+    --iq-paper:      #F7F5EF;
+    --iq-ink:        #17171C;
+    --iq-rule:       #2B2B30;
+    --iq-rule-faint: #D6D1C4;
+    --iq-stamp:      #A3202C;
+    --iq-mark:       #2E5339;
+
+    --iq-ink-60: color-mix(in oklab, var(--iq-ink) 60%, var(--iq-paper) 40%);
+    --iq-ink-75: color-mix(in oklab, var(--iq-ink) 75%, var(--iq-paper) 25%);
+
+    /* Bootstrap variable overrides */
+    --bs-body-bg:         var(--iq-paper);
+    --bs-body-color:      var(--iq-ink);
+    --bs-body-font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    --bs-body-font-size:  16px;
+    --bs-border-color:    var(--iq-rule);
+    --bs-border-radius:   0;
+    --bs-border-radius-sm: 0;
+    --bs-border-radius-lg: 0;
+    --bs-border-radius-pill: 0;
+    --bs-primary:         var(--iq-ink);
+    --bs-primary-rgb:     23, 23, 28;
+    --bs-link-color:      var(--iq-ink);
+    --bs-link-color-rgb:  23, 23, 28;
+    --bs-link-hover-color: var(--iq-stamp);
+    --bs-link-hover-color-rgb: 163, 32, 44;
+}
+
+/* --- Reset & base ---------------------------------------------- */
+
+html, body { background: var(--iq-paper); }
+body {
+    color: var(--iq-ink);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+a:not(.btn) { color: var(--iq-ink); text-decoration: underline; text-underline-offset: 3px; }
+a:not(.btn):hover { color: var(--iq-stamp); }
+
+h1, h2, h3 {
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    margin-top: 0;
+    color: var(--iq-ink);
+}
+h1 { font-size: 32px; margin-bottom: 24px; }
+h2 { font-size: 24px; margin-bottom: 16px; margin-top: 32px; }
+h3 { font-size: 18px; margin-bottom: 8px; }
+
+p { margin-top: 0; }
+
+/* --- Top strip (nav) ------------------------------------------ */
+
+.iq-strip {
+    background: var(--iq-ink);
+    color: var(--iq-paper);
+    padding: 12px 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+.iq-strip a { color: var(--iq-paper); text-decoration: none; }
+.iq-strip a:hover { color: var(--iq-stamp); }
+.iq-strip__brand { font-weight: 600; letter-spacing: 0.14em; }
+.iq-strip__nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+.iq-strip__user { opacity: 0.7; }
+.iq-strip form { display: inline; margin: 0; }
+.iq-strip form button {
+    background: none;
+    border: none;
+    color: var(--iq-paper);
+    padding: 0;
+    font: inherit;
+    text-transform: uppercase;
+    letter-spacing: inherit;
+    cursor: pointer;
+}
+.iq-strip form button:hover { color: var(--iq-stamp); }
+
+/* --- Container ------------------------------------------------ */
+
+.iq-container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+}
+@media (max-width: 640px) {
+    .iq-container { padding: 24px 16px 48px; }
+    .iq-strip { padding: 10px 16px; }
+}
+
+/* --- Messages / alerts ---------------------------------------- */
+
+.iq-messages { margin-bottom: 24px; }
+.iq-messages .alert {
+    border-width: 2px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    background: var(--iq-paper);
+    color: var(--iq-ink);
+    border-radius: 0;
+}
+.iq-messages .alert-success { border-color: var(--iq-rule); }
+.iq-messages .alert-error,
+.iq-messages .alert-danger { border-color: var(--iq-stamp); color: var(--iq-stamp); }
+.iq-messages .alert-info { border-color: var(--iq-rule-faint); }
+
+/* --- Buttons -------------------------------------------------- */
+
+.btn {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    font-size: 14px;
+    padding: 12px 20px;
+    border-width: 2px;
+    border-radius: 0;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+.btn-primary,
+.btn-primary:focus {
+    background: var(--iq-ink);
+    color: var(--iq-paper);
+    border-color: var(--iq-ink);
+}
+.btn-primary:hover, .btn-primary:active {
+    background: #000;
+    border-color: #000;
+    color: var(--iq-paper);
+}
+.btn-outline-primary,
+.btn-outline-secondary {
+    background: var(--iq-paper);
+    color: var(--iq-ink);
+    border-color: var(--iq-rule);
+}
+.btn-outline-primary:hover,
+.btn-outline-secondary:hover {
+    background: var(--iq-ink);
+    color: var(--iq-paper);
+    border-color: var(--iq-ink);
+}
+.btn-link { color: var(--iq-ink); text-decoration: underline; text-underline-offset: 3px; }
+.btn-sm { padding: 8px 14px; font-size: 12px; }
+
+/* --- Forms ---------------------------------------------------- */
+
+form label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--iq-ink-60);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+}
+form input[type=text],
+form input[type=email],
+form input[type=password],
+form input[type=datetime-local],
+form input[type=url],
+form input[type=number],
+form select,
+form textarea {
+    background: var(--iq-paper);
+    border: 2px solid var(--iq-rule);
+    border-radius: 0;
+    color: var(--iq-ink);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    padding: 10px 12px;
+    width: 100%;
+    box-sizing: border-box;
+    vertical-align: baseline;
+    margin: 0;
+}
+
+/* Select needs explicit normalization: native UA chrome overrides the
+   rules above (OS-drawn arrow, inner border on Chrome, slightly different
+   line-box) which makes it taller / narrower / rounder than text inputs.
+   Strip the native appearance and paint our own chevron. */
+form select:not([multiple]) {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 36px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6' fill='none' stroke='%2317171C' stroke-width='2'><path d='M1 1l4 4 4-4'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 10px 6px;
+}
+/* Firefox renders a text-shadow halo on the selected option; kill it. */
+form select:-moz-focusring {
+    color: transparent;
+    text-shadow: 0 0 0 var(--iq-ink);
+}
+
+form input:focus-visible,
+form select:focus-visible,
+form textarea:focus-visible {
+    outline: 2px solid var(--iq-ink);
+    outline-offset: 2px;
+    border-color: var(--iq-ink);
+}
+.form-text, .text-muted { color: var(--iq-ink-60) !important; }
+.mb-3 { margin-bottom: 16px; }
+.mb-4 { margin-bottom: 24px; }
+.mt-3 { margin-top: 16px; }
+.mt-4 { margin-top: 24px; }
+.invalid-feedback {
+    color: var(--iq-stamp);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 4px;
+}
+
+/* --- Tables --------------------------------------------------- */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    margin-bottom: 24px;
+    color: var(--iq-ink);
+}
+.table thead th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--iq-rule);
+    color: var(--iq-ink);
+    font-weight: 600;
+    background: transparent;
+}
+.table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid var(--iq-rule-faint);
+    font-size: 14px;
+    vertical-align: top;
+    background: transparent;
+}
+
+/* --- Letterhead (owner dashboard) ----------------------------- */
+
+.iq-letterhead {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 6px 20px;
+    padding: 20px 0;
+    border-top: 2px solid var(--iq-rule);
+    border-bottom: 2px solid var(--iq-rule);
+    margin: 0 0 32px 0;
+}
+.iq-letterhead dt {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--iq-ink-60);
+    margin: 0;
+    padding-top: 2px;
+}
+.iq-letterhead dd {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    color: var(--iq-ink);
+    margin: 0;
+}
+
+/* --- Standing (owner dashboard status) ----------------------- */
+
+.iq-standing { margin: 0 0 32px 0; padding: 0; list-style: none; }
+.iq-standing li {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--iq-rule-faint);
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+.iq-standing__store {
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+}
+.iq-standing__state {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--iq-ink-60);
+    text-align: right;
+    align-self: center;
+}
+.iq-standing__state--open { color: var(--iq-stamp); }
+
+/* --- Queue (inspector dashboard) ----------------------------- */
+
+.iq-queue { margin: 0 0 32px 0; padding: 0; list-style: none; }
+
+/* Desktop: four columns, four children (when / site / status / action),
+   one child per cell. No row spans, no partial-explicit positioning —
+   every mapping is 1-to-1 with grid-template-columns. */
+.iq-queue > li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 140px auto auto;
+    column-gap: 24px;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--iq-rule-faint);
+}
+.iq-queue__when {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--iq-ink);
+}
+.iq-queue__site {
+    min-width: 0;   /* let the inner text wrap inside the 1fr column */
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.iq-queue__store {
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--iq-ink);
+    margin: 0;
+    line-height: 1.25;
+}
+.iq-queue__address {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 13px;
+    color: var(--iq-ink-60);
+    margin: 0;
+    line-height: 1.35;
+}
+.iq-queue__status {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--iq-ink-60);
+    white-space: nowrap;
+}
+.iq-queue__action { white-space: nowrap; }
+/* Non-interactive marker that matches .btn.btn-outline-primary.btn-sm's
+   footprint so the queue's right edge stays uniform between SCHEDULED
+   rows (Conduct button) and non-SCHEDULED rows. Muted border + muted
+   text signal "not actionable" without changing the row's rhythm. */
+.iq-queue__done {
+    display: inline-block;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--iq-ink-60);
+    background: var(--iq-paper);
+    border: 2px solid var(--iq-rule-faint);
+    padding: 8px 14px;
+    line-height: 1;
+    cursor: default;
+    user-select: none;
+}
+
+/* Phone: stack as name, address, date, status, action (full-width button).
+   Source order is when / site / status / action, so CSS `order` reorders
+   site above when without touching the template. */
+@media (max-width: 640px) {
+    .iq-queue > li {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        padding: 20px 0;
+    }
+    .iq-queue__site { order: 1; }
+    .iq-queue__when { order: 2; }
+    .iq-queue__status { order: 3; }
+    .iq-queue__action { order: 4; display: block; margin-top: 4px; }
+    .iq-queue__action > a { display: block; width: 100%; text-align: center; }
+}
+
+/* --- Empty state --------------------------------------------- */
+
+.iq-empty {
+    border-top: 1px solid var(--iq-rule-faint);
+    border-bottom: 1px solid var(--iq-rule-faint);
+    padding: 32px 16px;
+    margin: 24px 0;
+}
+.iq-empty__headline {
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    font-size: 20px;
+    margin: 0 0 8px 0;
+    color: var(--iq-ink);
+    font-weight: 600;
+}
+.iq-empty__sub {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    color: var(--iq-ink-60);
+    margin: 0 0 16px 0;
+}
+.iq-empty__action {
+    margin-top: 8px;
+}
+
+/* --- Page head (title + primary action on one baseline) ------ */
+
+.iq-page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    margin: 0 0 24px 0;
+}
+.iq-page-head > h1 { margin-bottom: 0; }
+
+/* --- Foot actions (muted dot-separated link row) ------------- */
+
+.iq-foot-actions {
+    margin-top: 32px;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    color: var(--iq-ink-60);
+}
+.iq-foot-actions a {
+    color: var(--iq-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+.iq-foot-actions span { margin: 0 8px; color: var(--iq-ink-60); }
+
+/* --- Error banner (conduct form) ----------------------------- */
+
+.iq-error-banner {
+    border: 2px solid var(--iq-stamp);
+    padding: 16px 20px;
+    margin: 0 0 24px 0;
+    background: var(--iq-paper);
+}
+.iq-error-banner h2 {
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    font-size: 18px;
+    color: var(--iq-stamp);
+    margin: 0 0 8px 0;
+}
+.iq-error-banner p {
+    font-size: 14px;
+    margin: 0 0 12px 0;
+}
+.iq-error-banner ul { margin: 0; padding: 0; list-style: none; }
+.iq-error-banner li { margin-bottom: 4px; }
+.iq-error-banner a {
+    color: var(--iq-stamp);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+}
+
+/* --- Conduct form row ---------------------------------------- */
+
+.iq-row-card {
+    border: 2px solid var(--iq-rule);
+    padding: 16px;
+    margin-bottom: 16px;
+    background: var(--iq-paper);
+    scroll-margin-top: 16px;
+}
+.iq-row-card--error {
+    border-left-width: 6px;
+    border-left-color: var(--iq-stamp);
+}
+.iq-row-card--recorded .iq-row-title { color: var(--iq-ink-75); }
+.iq-row-card--recorded .iq-row-standard { display: none; }
+
+.iq-row-error-strip {
+    display: block;
+    background: var(--iq-stamp);
+    color: var(--iq-paper);
+    padding: 6px 16px;
+    margin: -16px -16px 12px -16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.iq-row-code {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--iq-ink-60);
+}
+.iq-row-title {
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 2px 0 10px 0;
+    line-height: 1.3;
+    color: var(--iq-ink);
+}
+
+.iq-row-standard { margin: 0 0 10px 0; }
+.iq-row-standard > summary {
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--iq-ink-60);
+    padding: 10px 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    list-style: none;
+    user-select: none;
+}
+.iq-row-standard > summary::-webkit-details-marker { display: none; }
+.iq-row-standard > summary::before { content: "\25B8"; display: inline-block; width: 10px; }
+.iq-row-standard[open] > summary::before { content: "\25BE"; }
+.iq-row-standard > p {
+    margin: 4px 0 10px 0;
+    padding: 10px 0;
+    border-top: 1px solid var(--iq-rule-faint);
+    font-size: 14px;
+    color: var(--iq-ink-75);
+    line-height: 1.55;
+}
+
+/* --- Outcome radio group ------------------------------------- */
+
+.iq-outcome {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+}
+.iq-outcome-btn {
+    position: relative;
+    min-height: 56px;
+    border: 2px solid var(--iq-rule);
+    background: var(--iq-paper);
+    color: var(--iq-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    padding: 10px 6px;
+    user-select: none;
+    margin: 0;
+}
+.iq-outcome-btn input[type=radio] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 1px;
+    height: 1px;
+}
+.iq-outcome-btn:has(input[type=radio]:focus-visible) {
+    outline: 2px solid var(--iq-ink);
+    outline-offset: 2px;
+}
+.iq-outcome-btn--pass:has(input[type=radio]:checked) {
+    background: var(--iq-mark);
+    border-color: var(--iq-mark);
+    color: var(--iq-paper);
+}
+.iq-outcome-btn--fail:has(input[type=radio]:checked) {
+    background: var(--iq-stamp);
+    border-color: var(--iq-stamp);
+    color: var(--iq-paper);
+}
+.iq-outcome-btn--na:has(input[type=radio]:checked) {
+    background: var(--iq-ink);
+    border-color: var(--iq-ink);
+    color: var(--iq-paper);
+}
+.iq-outcome-glyph {
+    font-size: 16px;
+    font-weight: 400;
+}
+.iq-row-card--error .iq-outcome-btn:not(:has(input:checked)) {
+    border-color: var(--iq-stamp);
+}
+
+/* --- Status chip (used by dashboards and lists) -------------- */
+
+.iq-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border: 1px solid var(--iq-rule);
+    color: var(--iq-ink);
+    display: inline-block;
+    line-height: 1.4;
+}
+.iq-chip--stamp { color: var(--iq-stamp); border-color: var(--iq-stamp); }
+
+/* --- Deadline block (reserved for Story 11 ticket pages) ----- */
+
+.iq-deadline {
+    border: 2px solid var(--iq-rule);
+    padding: 16px 20px;
+    margin: 24px 0;
+    display: inline-block;
+}
+.iq-deadline__label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--iq-ink-60);
+    display: block;
+    margin-bottom: 8px;
+}
+.iq-deadline__date {
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--iq-ink);
+}
+.iq-deadline__sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--iq-stamp);
+    margin-top: 8px;
+    display: block;
+}
+
+/* --- Section rule -------------------------------------------- */
+
+.iq-section-rule {
+    border: none;
+    border-top: 2px solid var(--iq-rule);
+    margin: 32px 0 16px 0;
+}
+.iq-section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--iq-ink-60);
+    font-weight: 600;
+    border-bottom: 2px solid var(--iq-rule);
+    padding-bottom: 6px;
+    margin: 32px 0 16px 0;
+}
+
+/* --- Narrow form container (login, register, schedule) ------- */
+
+.iq-form-column { max-width: 480px; margin: 0; }
+
+/* --- Visually hidden ----------------------------------------- */
+
+.iq-sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
