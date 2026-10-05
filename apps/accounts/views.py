@@ -5,6 +5,7 @@ from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, RedirectView, TemplateView
 
+from apps.inspections.models import Inspection
 from apps.stores.models import Store
 
 from .forms import EmailAuthenticationForm, RegistrationForm
@@ -53,6 +54,11 @@ class InspectorDashboardView(LoginRequiredMixin, TemplateView):
         if request.user.is_authenticated and request.user.role != User.Role.INSPECTOR:
             return redirect("home")
         return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["inspections"] = Inspection.objects.visible_to(self.request.user)
+        return ctx
 
 
 class OwnerDashboardView(LoginRequiredMixin, TemplateView):

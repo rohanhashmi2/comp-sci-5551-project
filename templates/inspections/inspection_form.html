@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block title %}Schedule inspection — InspectIQ{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h1 class="mb-4">Schedule inspection</h1>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% bootstrap_button "Schedule" button_type="submit" button_class="btn-primary" %}
+            <a href="{% url 'accounts:inspector_dashboard' %}" class="btn btn-link">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

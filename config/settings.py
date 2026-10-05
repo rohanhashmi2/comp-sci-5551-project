@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     "apps.accounts.apps.AccountsConfig",
     "apps.common.apps.CommonConfig",
     "apps.stores.apps.StoresConfig",
+    "apps.inspections.apps.InspectionsConfig",
 ]
 
 MIDDLEWARE = [

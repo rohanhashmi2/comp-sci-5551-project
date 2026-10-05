@@ -9,7 +9,30 @@
 <div class="mt-4">
     <a href="{% url 'stores:add' %}" class="btn btn-primary">Add store</a>
     <a href="{% url 'stores:list' %}" class="btn btn-outline-secondary">View all stores</a>
+    <a href="{% url 'inspections:schedule' %}" class="btn btn-primary">Schedule inspection</a>
 </div>
 
-<p class="text-muted mt-4">Scheduled inspections will appear here (Story 6).</p>
+<h2 class="mt-4">Scheduled inspections</h2>
+{% if inspections %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Store</th>
+            <th>When</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for inspection in inspections %}
+        <tr>
+            <td>{{ inspection.store.name }}</td>
+            <td>{{ inspection.scheduled_for|date:"Y-m-d H:i" }}</td>
+            <td>{{ inspection.get_status_display }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="text-muted">No inspections scheduled yet.</p>
+{% endif %}
 {% endblock %}

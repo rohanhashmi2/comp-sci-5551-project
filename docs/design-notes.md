@@ -126,6 +126,26 @@ feature. Raise it before implementation starts, not after.
   Admin panel? Left as an implementation detail for a later sprint.
 - **What Postgres major version does each teammate's Supabase project
   run?** May vary across projects created at different times. See §12.
+- **Resolve the assumption 8 / assumption 14 contradiction before
+  Story 6.** Assumption 8 says *"the inspector who schedules an
+  inspection is the one who conducts it,"* which presumes an
+  inspector-per-inspection linkage. Assumption 14 says there is no
+  such linkage — inspectors have unscoped visibility and `Inspection`
+  carries no inspector FK. Both can't stand. Story 5 ships `Inspection`
+  without an inspector FK (matching assumption 14). Before Story 6
+  implements the conducting flow, pick one of:
+    - **(i)** Revise assumption 8 to drop the assignment implication:
+      "any inspector can conduct any inspection; one person conducts
+      an inspection start-to-finish, no mid-inspection handoff." No
+      model change.
+    - **(ii)** Add a nullable `conducted_by: ForeignKey(User, null=True,
+      blank=True, on_delete=SET_NULL, limit_choices_to={'role':
+      INSPECTOR})` as audit-only. Set when `IN_PROGRESS` begins. Does
+      *not* restrict who can conduct; keep the view unscoped. Name
+      must be `conducted_by`, never "assigned_to" or "inspector" — the
+      wording matters because Story 4 already rejected assignment
+      semantics for stores.
+  Story 6 planning will record which option was taken and why.
 
 ---
 
