@@ -53,8 +53,12 @@ below rests on the answers. If any of these change, expect ripple effects.
 7. **One owner per store; one owner may have several stores** — the
    `Store.owner` field is a single `ForeignKey`. Joint-ownership would
    require a `ManyToManyField` or a separate membership table.
-8. **No inspector reassignment mid-inspection** — the inspector who
-   schedules an inspection is the one who conducts it.
+8. **Any inspector can conduct any inspection; one person conducts an
+   inspection start-to-finish.** No handoff mid-inspection and no
+   inspector-to-inspection assignment. (Original wording — "the inspector
+   who schedules an inspection is the one who conducts it" — implied an
+   assignment feature not present in the model. Revised during Story 6
+   planning to resolve the assumption 8 / assumption 14 contradiction.)
 9. **Overdue tickets get a dashboard flag only** — no automated escalation,
    no email, no state change when a deadline passes.
 10. **No email notifications in MVP scope** — everything is in-app.
@@ -110,6 +114,34 @@ to me" or "the tickets assigned to me." If so, reword to match the
 unscoped-inspector-visibility design rather than adding an assignment
 feature. Raise it before implementation starts, not after.
 
+#### Note: AC rewording in US-6 (US-6 AC 6.5)
+
+Story 6's original AC 6.5 carried the same drafting error that Story 4
+corrected:
+
+> AC 6.5 (original): Given an inspection is scheduled for a store
+> assigned to a different inspector… When an inspector who is not
+> assigned requests that inspection form… Then the system denies access
+> and no results are recorded.
+
+Under the revised assumption 8 (any inspector can conduct any
+inspection) and assumption 14 (no inspector-side scoping on stores),
+there is no "assigned to a different inspector" and no "inspector who
+is not assigned." As written, the criterion could not be satisfied
+without reintroducing an assignment feature that nothing else in the
+project needs.
+
+Story 6 therefore reworded AC 6.5 to test the real adjacent invariant —
+owner-side denial of the conducting flow, mirroring AC 5.4's shape:
+
+> **AC 6.5 (rewritten): A store owner cannot open the inspection
+> form.** Given a store owner is logged in. When the store owner
+> requests the inspection form for any inspection. Then the system
+> denies access and no results are recorded.
+
+The replacement proves that owners cannot conduct inspections even
+against stores they own, which the project brief explicitly requires.
+
 ### Genuinely open questions
 
 - **What are the actual user stories?** Everything below is speculative
@@ -126,26 +158,10 @@ feature. Raise it before implementation starts, not after.
   Admin panel? Left as an implementation detail for a later sprint.
 - **What Postgres major version does each teammate's Supabase project
   run?** May vary across projects created at different times. See §12.
-- **Resolve the assumption 8 / assumption 14 contradiction before
-  Story 6.** Assumption 8 says *"the inspector who schedules an
-  inspection is the one who conducts it,"* which presumes an
-  inspector-per-inspection linkage. Assumption 14 says there is no
-  such linkage — inspectors have unscoped visibility and `Inspection`
-  carries no inspector FK. Both can't stand. Story 5 ships `Inspection`
-  without an inspector FK (matching assumption 14). Before Story 6
-  implements the conducting flow, pick one of:
-    - **(i)** Revise assumption 8 to drop the assignment implication:
-      "any inspector can conduct any inspection; one person conducts
-      an inspection start-to-finish, no mid-inspection handoff." No
-      model change.
-    - **(ii)** Add a nullable `conducted_by: ForeignKey(User, null=True,
-      blank=True, on_delete=SET_NULL, limit_choices_to={'role':
-      INSPECTOR})` as audit-only. Set when `IN_PROGRESS` begins. Does
-      *not* restrict who can conduct; keep the view unscoped. Name
-      must be `conducted_by`, never "assigned_to" or "inspector" — the
-      wording matters because Story 4 already rejected assignment
-      semantics for stores.
-  Story 6 planning will record which option was taken and why.
+*(Resolved: the assumption 8 / 14 contradiction was closed in Story 6
+planning by revising assumption 8 to drop the assignment implication.
+No `conducted_by` field was added, because no acceptance criterion in
+the backlog reads it. See the AC 6.5 rewording note below.)*
 
 ---
 

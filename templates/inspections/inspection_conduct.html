@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block title %}Conduct inspection — InspectIQ{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-baseline mb-3">
+    <h1>Conduct inspection</h1>
+    <a href="{% url 'accounts:inspector_dashboard' %}" class="btn btn-link">Cancel</a>
+</div>
+
+<p class="text-muted mb-4">
+    <strong>Store:</strong> {{ inspection.store.name }}<br>
+    <strong>Scheduled for:</strong> {{ inspection.scheduled_for|date:"Y-m-d H:i" }}
+</p>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    {{ formset.management_form }}
+
+    {% if formset.non_form_errors %}
+    <div class="alert alert-danger">
+        {{ formset.non_form_errors }}
+    </div>
+    {% endif %}
+
+    {% for form in formset %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h3 class="card-title h5">
+                {{ form.checklist_item_obj.code }} —
+                {{ form.checklist_item_obj.title }}
+            </h3>
+            <p class="card-text text-muted small">
+                {{ form.checklist_item_obj.description }}
+            </p>
+            {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+            {{ form.outcome }}
+            {% if form.outcome.errors %}
+            <div class="invalid-feedback d-block">{{ form.outcome.errors }}</div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% bootstrap_button "Record inspection" button_type="submit" button_class="btn-primary" %}
+</form>
+{% endblock %}

@@ -2,10 +2,15 @@ from datetime import timedelta
 
 import pytest
 from django.contrib.auth.models import AnonymousUser
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.accounts.models import User
-from apps.inspections.models import Inspection
+from apps.inspections.models import (
+    ChecklistItem,
+    Inspection,
+    InspectionResult,
+)
 from apps.stores.models import Store
 
 
@@ -99,3 +104,85 @@ def test_inspection_visible_to_filters_by_role(
     assert weird.is_authenticated is True
     assert weird.role not in ("INSPECTOR", "OWNER")
     assert list(Inspection.objects.visible_to(weird)) == []
+
+
+@pytest.mark.django_db
+def test_checklist_item_str_returns_code_and_title():
+    item = ChecklistItem.objects.create(
+        code="XX-01", title="A thing to check", description="…", ordering=1
+    )
+    text = str(item)
+    assert "XX-01" in text
+    assert "A thing to check" in text
+
+
+@pytest.mark.django_db
+def test_inspection_result_unique_per_item(store_a):
+    inspection = Inspection.objects.create(
+        store=store_a, scheduled_for=timezone.now() + timedelta(days=1)
+    )
+    item = ChecklistItem.objects.create(
+        code="XX-01", title="Dup check", description="…", ordering=1
+    )
+    InspectionResult.objects.create(
+        inspection=inspection,
+        checklist_item=item,
+        outcome=InspectionResult.Outcome.PASS,
+    )
+    with pytest.raises(IntegrityError), transaction.atomic():
+        InspectionResult.objects.create(
+            inspection=inspection,
+            checklist_item=item,
+            outcome=InspectionResult.Outcome.FAIL,
+        )
+
+
+@pytest.mark.django_db
+def test_inspection_result_visible_to_filters_by_role(
+    inspector, owner_a, owner_b, store_a, store_b
+):
+    a_insp = Inspection.objects.create(
+        store=store_a, scheduled_for=timezone.now() + timedelta(days=1)
+    )
+    b_insp = Inspection.objects.create(
+        store=store_b, scheduled_for=timezone.now() + timedelta(days=2)
+    )
+    item = ChecklistItem.objects.create(
+        code="XX-01", title="Just one", description="…", ordering=1
+    )
+    a_result = InspectionResult.objects.create(
+        inspection=a_insp,
+        checklist_item=item,
+        outcome=InspectionResult.Outcome.PASS,
+    )
+    item2 = ChecklistItem.objects.create(
+        code="XX-02", title="Another", description="…", ordering=2
+    )
+    b_result = InspectionResult.objects.create(
+        inspection=b_insp,
+        checklist_item=item2,
+        outcome=InspectionResult.Outcome.FAIL,
+    )
+
+    assert set(InspectionResult.objects.visible_to(inspector)) == {
+        a_result,
+        b_result,
+    }
+    assert list(InspectionResult.objects.visible_to(owner_a)) == [a_result]
+    assert list(InspectionResult.objects.visible_to(owner_b)) == [b_result]
+    assert list(InspectionResult.objects.visible_to(AnonymousUser())) == []
+
+
+@pytest.mark.django_db
+def test_inspection_result_outcome_check_constraint(store_a):
+    inspection = Inspection.objects.create(
+        store=store_a, scheduled_for=timezone.now() + timedelta(days=1)
+    )
+    item = ChecklistItem.objects.create(
+        code="XX-01", title="Check", description="…", ordering=1
+    )
+    result = InspectionResult(
+        inspection=inspection, checklist_item=item, outcome="BOGUS"
+    )
+    with pytest.raises(IntegrityError), transaction.atomic():
+        result.save()

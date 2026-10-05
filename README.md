@@ -138,12 +138,15 @@ Edit `.env`:
 ### E. Migrate and run
 
 ```bash
-python manage.py migrate             # applies schema to your Supabase project
-python manage.py createsuperuser     # optional; for /admin
+python manage.py migrate                                              # applies schema to your Supabase project
+python manage.py loaddata apps/inspections/fixtures/checklist_items.json  # seeds the 12 ChecklistItem rows
+python manage.py createsuperuser                                      # optional; for /admin
 
-pytest                               # runs against local Postgres
-python manage.py runserver           # http://127.0.0.1:8000/
+pytest                                                                # runs against local Postgres
+python manage.py runserver                                            # http://127.0.0.1:8000/
 ```
+
+The `loaddata` command uses explicit PKs in the fixture file, so re-running it updates in place rather than duplicating rows.
 
 If `pytest` fails on first run because `inspectiq_dev` does not exist, run `createdb inspectiq_dev` and re-run.
 
