@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Inspector dashboard — InspectIQ{% endblock %}
+
+{% block content %}
+<h1>Inspector dashboard</h1>
+<p>Welcome, {{ request.user.email }}.</p>
+<p class="text-muted">Scheduled inspections will appear here (Story 6).</p>
+{% endblock %}

@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
 from .models import User
 
@@ -15,3 +15,12 @@ class RegistrationForm(UserCreationForm):
             choices=[("", "Choose your role…"), *User.Role.choices]
         )
         self.fields["role"].required = True
+
+
+class EmailAuthenticationForm(AuthenticationForm):
+    # CharField (not EmailField) so an injection pattern reaches the ORM
+    # layer; parameterization is the defense verified by AC 2.5.
+    username = forms.CharField(
+        label="Email",
+        widget=forms.EmailInput(attrs={"autofocus": True, "autocomplete": "email"}),
+    )
