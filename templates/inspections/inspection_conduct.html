@@ -4,45 +4,90 @@
 {% block title %}Conduct inspection — InspectIQ{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-baseline mb-3">
-    <h1>Conduct inspection</h1>
-    <a href="{% url 'accounts:inspector_dashboard' %}" class="btn btn-link">Cancel</a>
-</div>
-
+<p class="iq-section-title" style="margin-top: 0;">Conduct inspection</p>
+<h1>{{ inspection.store.name }}</h1>
 <p class="text-muted mb-4">
-    <strong>Store:</strong> {{ inspection.store.name }}<br>
-    <strong>Scheduled for:</strong> {{ inspection.scheduled_for|date:"Y-m-d H:i" }}
+    Scheduled {{ inspection.scheduled_for|date:"l, j F Y · H:i" }} · {{ inspection.store.address }}
 </p>
 
 <form method="post" novalidate>
     {% csrf_token %}
     {{ formset.management_form }}
 
-    {% if formset.non_form_errors %}
-    <div class="alert alert-danger">
-        {{ formset.non_form_errors }}
-    </div>
+    {% if formset.errors or formset.non_form_errors %}
+        {% comment %}
+            Build an anchored list from the forms that specifically have
+            an outcome error, so the banner points at exactly the rows
+            that need action.
+        {% endcomment %}
+        <section class="iq-error-banner" role="alert" aria-labelledby="iq-error-heading">
+            <h2 id="iq-error-heading">Some items need an outcome</h2>
+            <p>Mark an outcome for every item below. The unaddressed items are:</p>
+            <ul>
+                {% for form in formset %}
+                    {% if form.outcome.errors %}
+                    <li>
+                        <a href="#item-{{ form.checklist_item_obj.code }}">
+                            {{ form.checklist_item_obj.code }} — {{ form.checklist_item_obj.title }}
+                        </a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </section>
     {% endif %}
 
     {% for form in formset %}
-    <div class="card mb-3">
-        <div class="card-body">
-            <h3 class="card-title h5">
-                {{ form.checklist_item_obj.code }} —
-                {{ form.checklist_item_obj.title }}
-            </h3>
-            <p class="card-text text-muted small">
-                {{ form.checklist_item_obj.description }}
-            </p>
-            {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-            {{ form.outcome }}
-            {% if form.outcome.errors %}
-            <div class="invalid-feedback d-block">{{ form.outcome.errors }}</div>
-            {% endif %}
+    <article
+        id="item-{{ form.checklist_item_obj.code }}"
+        class="iq-row-card{% if form.outcome.errors %} iq-row-card--error{% endif %}{% if form.outcome.value %} iq-row-card--recorded{% endif %}"
+    >
+        {% if form.outcome.errors %}
+        <p class="iq-row-error-strip">This item needs an outcome.</p>
+        {% endif %}
+
+        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+        <span class="iq-row-code">{{ form.checklist_item_obj.code }}</span>
+        <h3 class="iq-row-title" id="item-{{ form.checklist_item_obj.code }}-title">
+            {{ form.checklist_item_obj.title }}
+        </h3>
+
+        <details class="iq-row-standard"{% if form.outcome.errors %} open{% endif %}>
+            <summary>Show standard</summary>
+            <p>{{ form.checklist_item_obj.description }}</p>
+        </details>
+
+        <div class="iq-outcome" role="radiogroup"
+             aria-labelledby="item-{{ form.checklist_item_obj.code }}-title">
+            {% for radio in form.outcome %}
+                {% if radio.data.value == "PASS" %}
+                <label class="iq-outcome-btn iq-outcome-btn--pass" for="{{ radio.id_for_label }}">
+                    {{ radio.tag }}
+                    <span class="iq-outcome-glyph" aria-hidden="true">✓</span>
+                    <span>Pass</span>
+                </label>
+                {% elif radio.data.value == "FAIL" %}
+                <label class="iq-outcome-btn iq-outcome-btn--fail" for="{{ radio.id_for_label }}">
+                    {{ radio.tag }}
+                    <span class="iq-outcome-glyph" aria-hidden="true">✕</span>
+                    <span>Fail</span>
+                </label>
+                {% elif radio.data.value == "NOT_APPLICABLE" %}
+                <label class="iq-outcome-btn iq-outcome-btn--na" for="{{ radio.id_for_label }}">
+                    {{ radio.tag }}
+                    <span class="iq-outcome-glyph" aria-hidden="true">—</span>
+                    <span>N/A</span>
+                </label>
+                {% endif %}
+            {% endfor %}
         </div>
-    </div>
+    </article>
     {% endfor %}
 
-    {% bootstrap_button "Record inspection" button_type="submit" button_class="btn-primary" %}
+    <div class="mt-4">
+        {% bootstrap_button "Record inspection" button_type="submit" button_class="btn-primary" %}
+        <a href="{% url 'accounts:inspector_dashboard' %}" class="btn btn-link">Cancel</a>
+    </div>
 </form>
 {% endblock %}

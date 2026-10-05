@@ -3,10 +3,7 @@
 {% block title %}Stores — InspectIQ{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Stores</h1>
-    <a href="{% url 'stores:add' %}" class="btn btn-primary">Add store</a>
-</div>
+<h1>Stores</h1>
 
 {% if stores %}
 <table class="table">
@@ -28,6 +25,13 @@
     </tbody>
 </table>
 {% else %}
-<p class="text-muted">No stores yet.</p>
+<div class="iq-empty">
+    <p class="iq-empty__headline">No stores yet on file.</p>
+    <p class="iq-empty__sub">A store must be added before an inspection can be scheduled.</p>
+</div>
 {% endif %}
+
+<p class="mt-4">
+    <a href="{% url 'stores:add' %}" class="btn btn-primary">Add store</a>
+</p>
 {% endblock %}

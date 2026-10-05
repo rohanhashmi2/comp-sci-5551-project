@@ -813,4 +813,165 @@ other entries are the standard Python/pytest hygiene set.
 
 ---
 
+## 14. UI conventions
+
+Hand-off for Stories 7–13. Rules below are what the stylesheet already
+assumes; do not re-decide them on a per-page basis. Stylesheet lives at
+`apps/common/static/css/inspectiq.css`; load it with
+`{% static 'css/inspectiq.css' %}` in `base.html` (already wired).
+
+### 14.1 Palette — six tokens
+
+| Token            | Hex      | Use for                                                        |
+|------------------|----------|----------------------------------------------------------------|
+| `--iq-paper`     | `#F7F5EF`| Page background. Warm off-white. Never pure white.             |
+| `--iq-ink`       | `#17171C`| Primary text, strong buttons, active N/A outcome.              |
+| `--iq-rule`      | `#2B2B30`| Strong borders — card edges, button borders, section rules.    |
+| `--iq-rule-faint`| `#D6D1C4`| Hairlines — table-row dividers, in-card separators.            |
+| `--iq-stamp`     | `#A3202C`| **Consequences only.** FAIL outcome; ticket deadline; overdue state; validation-error borders. |
+| `--iq-mark`      | `#2E5339`| **Recorded passes only.** PASS outcome.                        |
+
+**Restrictions, hard rules:**
+
+- **`--iq-stamp` is reserved for consequences.** Failures, open-ticket indicators, deadlines passed or near, validation errors (on the row with the problem). It must **never** appear on a secondary button, a success message, an "Add" button, or a nav link, no matter how much a page needs a highlight. Dilution kills the signal across the whole product. If a button needs weight, use `.btn-primary` (ink-filled); if a section needs separation, use a rule, not colour.
+- **`--iq-mark` is reserved for recorded passes.** It is the opposite of `--iq-stamp`. Do not use it for success toasts, "Save" buttons, confirmed-anything else. A pass is quiet.
+- **Everything else is ink on paper.** Buttons, nav, body prose, status labels, timestamps. If you're reaching for a third accent colour, you're reaching for the wrong tool — rework the hierarchy with weight, border, or typography instead.
+
+### 14.2 Typography — three faces, one family (IBM Plex)
+
+Loaded from Google Fonts in `base.html`. Do not add a fourth typeface.
+
+| Face                | CSS                                       | Use for                                                                |
+|---------------------|-------------------------------------------|------------------------------------------------------------------------|
+| **IBM Plex Serif**  | `font-family: 'IBM Plex Serif', Georgia, serif;` | Page titles (`<h1>`), section titles (`<h2>`), store names in queue/standing rows, **the deadline date on a ticket** — and nothing else. |
+| **IBM Plex Sans**   | `font-family: 'IBM Plex Sans', system-ui, sans-serif;` | Body prose, buttons, form fields, dashboard content, nav items. The default — don't declare it unless overriding. |
+| **IBM Plex Mono**   | `font-family: 'IBM Plex Mono', monospace;` | Checklist item codes (`FS-01`), status labels (`SCHEDULED`, `OPEN`), timestamps, ticket IDs, letterhead field labels. Always uppercase with `letter-spacing: 0.08em–0.1em`. |
+
+**Rule:** serif is the strongest typographic signal in the product. Reserve it for things that carry weight. If you find yourself using serif inside a table cell, you've over-promoted it.
+
+### 14.3 Layout rules — easy to break by accident
+
+- **Flush-left for everything.** No centered content, no centered page titles. Public documents are flush-left; centering is a wedding-invitation signal.
+- **`border-radius: 0`.** The stylesheet forces this. Do not re-enable rounded corners with `.rounded-*` Bootstrap utility classes.
+- **No shadows anywhere.** Do not add `box-shadow`, do not use Bootstrap's `shadow-*` utilities.
+- **Rules, not cards.** Sections are separated by horizontal rules (`<hr class="iq-section-rule">`, `.iq-section-title` with its own bottom border, or `border-bottom` on list items). Not floating `<div class="card">` elements.
+- **Spacing scale:** 4 / 8 / 16 / 24 / 32 / 48 px. Nothing in between. Prefer margin and padding over Bootstrap's spacer utilities when they fit cleanly in the scale.
+- **Container:** every page's content lives inside `main.iq-container` (already in `base.html`). Max-width 960px, flush-left on wider screens.
+
+### 14.4 Component classes — reuse before invent
+
+One-line reference. If none of these fits what you're building, add a new one in `inspectiq.css` **and** add a row here.
+
+| Class                | For                                                                                       |
+|----------------------|-------------------------------------------------------------------------------------------|
+| `.iq-strip`          | The ink header strip at the top of every page. Lives in `base.html`'s `{% block navbar %}`. |
+| `.iq-container`      | The main content column. Max 960px, flush-left. Wrap page content inside `main.iq-container`. |
+| `.iq-letterhead`     | The `<dl>`-based FROM/TO/DATE/SUBJECT block at the top of the owner dashboard and (in Story 11) the ticket detail page. |
+| `.iq-standing`       | The `<ul>` of per-store status lines on the owner dashboard. Each `<li>` carries a store on the left, a mono status on the right. Status gets `.iq-standing__state--open` (stamp colour) when something is unresolved. |
+| `.iq-queue`          | The `<ul>` of inspection rows on the inspector dashboard, with four slots per row (when / store+address / status / action). In Story 10 the ticket list reuses this layout. |
+| `.iq-empty`          | Empty-state block (bordered top-and-bottom, serif headline, muted sub). See §14.5 voice rules. |
+| `.iq-error-banner`   | Stamp-bordered banner at the top of a form that failed validation. Contains an `<h2>` and a list of anchor links to the specific rows that need attention. |
+| `.iq-row-card`       | A single row on the conduct form. Modifiers: `.iq-row-card--error` (thick stamp left border + row-top strip), `.iq-row-card--recorded` (title muted, standard details collapsed). |
+| `.iq-outcome-btn`    | The three outcome buttons inside `.iq-outcome`. Variants `--pass` / `--fail` / `--na` style the checked state. |
+| `.iq-deadline`       | Bordered block titled "DEADLINE" with a serif date inside. **The only place in the product a date renders in serif.** See §14.5 for use. |
+| `.iq-chip`           | Inline mono-uppercase status label. Modifier `.iq-chip--stamp` for stamp colour. See §14.5 for rules. |
+| `.iq-section-title`  | A section heading styled as uppercase mono with a 2px rule beneath it. For subsidiary sections on a page. |
+| `.iq-form-column`    | Form-only pages (login, register, add store, schedule inspection). 480px max-width, flush-left. |
+
+Utilities also in the sheet: `.iq-section-rule` (horizontal rule), `.iq-sr-only` (visually hidden but screen-reader readable), `.iq-mono` (mono+uppercase inline).
+
+### 14.5 What your stories will need
+
+**Stories 7 and 8 — comment and photo on `.iq-row-card`**
+
+Both extensions live **inside** each row's `.iq-row-card`, **below** the `.iq-outcome` div, **outside** the `<details>` standard disclosure. Shape:
+
+```html
+<article class="iq-row-card ...">
+    …code / title / <details>Standard / .iq-outcome…
+    <div class="iq-row-detail">              {# new wrapper, add to stylesheet #}
+        <label for="…-comment">Comment</label>
+        <textarea ... class="iq-input"></textarea>   {# existing form field styles cover this #}
+        <label for="…-photo">Photo</label>
+        <input type="file" ... class="iq-file" />
+    </div>
+</article>
+```
+
+- The comment field and photo input show up **only when the row's outcome is FAIL**. For Story 7 you can gate this at template level (`{% if form.outcome.value == "FAIL" %}`) — no JavaScript required.
+- Required-on-FAIL errors use the same `.iq-row-card--error` / `.iq-row-error-strip` machinery that already exists for AC 6.3. Add the error code to the form's `clean()` so a specific error label can be shown.
+- Add a `.iq-row-detail` class to the stylesheet when you ship this, matching the row's internal spacing (16px padding, 1px `--iq-rule-faint` top border).
+- Form `<form method="post" enctype="multipart/form-data" ...>` on the conduct template once a file input exists (Story 8). Don't add `enctype` until it does.
+
+**Story 11 — ticket detail with `.iq-deadline`**
+
+Markup pattern:
+
+```html
+<div class="iq-deadline">
+    <span class="iq-deadline__label">Deadline</span>
+    <p class="iq-deadline__date">{{ ticket.deadline|date:"l, j F Y" }}</p>
+    <span class="iq-deadline__sub">{{ ticket.deadline|days_remaining }}</span>
+</div>
+```
+
+- The `days_remaining` filter **does not exist yet.** It's your filter to write (in `apps/common/templatetags/`). Return `"15 DAYS REMAINING"` for a future date, `"OVERDUE — 3 DAYS PAST"` for a past date, `"DUE TODAY"` for today. Uppercase, no period. The stylesheet already colours the sub-line stamp-red; your filter returns the text.
+- Date format is long form (`"l, j F Y"` → "Tuesday, 20 October 2026"). Short-form ISO dates belong on bookkeeping rows, not here. The point of this block is to look like a date on a letter.
+- Only one `.iq-deadline` per page. The deadline is the single most consequential date in the product — do not render two side-by-side.
+
+**Stories 10–13 — status chips with `.iq-chip`**
+
+Use for inline status labels in list rows and tables (ticket list, evidence review queue):
+
+```html
+<span class="iq-chip">Pending</span>
+<span class="iq-chip iq-chip--stamp">Rejected</span>
+```
+
+**Rule:** a status chip must **always** carry a word. Never colour alone. A chip without a word is a bug. Reasons:
+
+- Printed inspection records are often monochrome photocopies — colour disappears.
+- Colour-blind inspectors and owners read the word.
+- An accessible screen reader reads the text node; a background colour is invisible to it.
+
+If you need to distinguish three or more statuses, use the word plus (optionally) a glyph prefix (`✓ Accepted`, `✕ Rejected`, `— Pending`). Match the pattern established in `.iq-outcome-btn`.
+
+**Every list page needs an empty state**
+
+Use `.iq-empty`. Voice is uniform across the product:
+
+- **Declarative sentences.** Period at the end.
+- **No exclamation marks.** Not ever. This is a public-service product.
+- **No emoji.** Not ever.
+- **No second-person cheer.** Not "You're all caught up!" — write what is true ("No open tickets.") or what to do next ("A store must be on file before an inspection can be scheduled.").
+- Pattern: a `.iq-empty__headline` with the statement in serif, then (optional) a `.iq-empty__sub` in muted sans with the follow-up action if there is one.
+
+Three varieties by role:
+- **Statement of record** ("No stores on file.", "No open tickets.") — closes with a short clarifying sub-line if useful; no CTA inside the block.
+- **Invitation to one action** — one and only one `.btn-primary` *below* the `.iq-empty` block (not inside it). Keeps the empty-state block uniform.
+- **Confirmation of good standing** ("Your establishments are in good standing as of 2026-10-05.") — Story 10's owner-dashboard pattern. Fully terminal, no action.
+
+### 14.6 Load-bearing modern-CSS features
+
+Two features of the stylesheet don't degrade gracefully. If a reviewer or demo laptop runs an older browser, these specific effects fall back:
+
+- **`:has()` selector.** Used to style the three `.iq-outcome-btn` variants based on which `<input type="radio">` inside the label is `:checked`. Required: Safari 15.4+ (March 2022), Chrome 105+ (September 2022), Firefox 121+ (December 2023). On an older browser **selected outcome buttons will render identical to unselected buttons** — the native radio dot inside the hidden input will not be visible either (we `opacity: 0` it). The form still submits correctly; it's unusable for conducting but tests still pass. If you need to support older browsers, the fallback is to render a visible native radio inside each button and swap the current selector-based styling for a template-level `{% if radio.data.selected %}` adding a `.is-checked` class to the label.
+- **`color-mix()` in `oklab`.** Used for the muted-text tokens `--iq-ink-60` and `--iq-ink-75`. Required: Safari 16.2+, Chrome 111+, Firefox 113+. On an older browser the muted text takes the browser default (usually inherits ink colour), reducing the visual hierarchy but not breaking anything.
+
+Both features are standard baseline as of late 2025, so demo-day Chrome/Safari/Firefox on any laptop updated in the last two years is fine. **Don't debug "my radios all look identical" blind — check the browser version first.**
+
+### 14.7 Supabase: Row Level Security is intentionally off
+
+If you open the Supabase dashboard and see every one of our tables flagged as **"Unrestricted"** with a yellow warning, that is expected, not a defect. Do not enable RLS.
+
+Reasons:
+- We use Supabase as **a managed Postgres host only**. The Data API (PostgREST), the auto-generated REST endpoints, the JavaScript / Python / Dart client SDKs, Supabase Auth, Supabase Storage, and Realtime are **all unused**. Nothing talks to Postgres except our Django process, over the session-pooler connection, as the single `postgres.<project-ref>` role.
+- Row-level security exists to protect multi-tenant data when the database is directly exposed to clients (which the Data API does). With no direct client access, RLS has no attack surface to protect against.
+- **All access control lives in `visible_to()` manager methods and the `InspectorRequiredMixin` / `OwnerRequiredMixin` pair.** `Store.objects.visible_to(user)`, `Inspection.objects.visible_to(user)`, `InspectionResult.objects.visible_to(user)`, and (coming in Stories 10–13) `Ticket.objects.visible_to(user)` + `Evidence.objects.visible_to(user)` are the authoritative scoping. Views call these; Track C's `RoleScopedQuerysetMixin` will enforce the call at the view layer.
+- Turning RLS on without migrating this logic into Postgres policies would **break every query** because the Django connection role would start getting filtered-out results it should see.
+
+If a grader or a code-reviewer flags the "Unrestricted" warning: point them at this section.
+
+---
+
 *End of proposal. Please argue with any of it.*

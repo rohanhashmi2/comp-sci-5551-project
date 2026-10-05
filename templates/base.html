@@ -1,4 +1,5 @@
 {% load django_bootstrap5 %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,55 +7,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}InspectIQ{% endblock %}</title>
     {% bootstrap_css %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;600&display=swap">
+    <link rel="stylesheet" href="{% static 'css/inspectiq.css' %}">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
     {% block navbar %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">InspectIQ</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
-                    {% block nav_items %}
-                    {% if request.user.is_authenticated %}
-                        {% if request.user.role == "INSPECTOR" %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'stores:list' %}">Stores</a>
-                        </li>
-                        {% endif %}
-                        <li class="nav-item">
-                            <span class="nav-link disabled">{{ request.user.email }}</span>
-                        </li>
-                        <li class="nav-item">
-                            <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-link nav-link">Log out</button>
-                            </form>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts:login' %}">Log in</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts:register' %}">Register</a>
-                        </li>
+    <header class="iq-strip">
+        <a href="{% url 'home' %}" class="iq-strip__brand">
+            InspectIQ
+            {% if request.user.is_authenticated %}
+                {% if request.user.role == "INSPECTOR" %}· Inspector{% else %}· Store owner{% endif %}
+            {% endif %}
+        </a>
+        <nav class="iq-strip__nav" aria-label="Primary">
+            <ul>
+                {% block nav_items %}
+                {% if request.user.is_authenticated %}
+                    {% if request.user.role == "INSPECTOR" %}
+                        <li><a href="{% url 'stores:list' %}">Stores</a></li>
                     {% endif %}
-                    {% endblock %}
-                </ul>
-            </div>
-        </div>
-    </nav>
+                    <li class="iq-strip__user">{{ request.user.email }}</li>
+                    <li>
+                        <form method="post" action="{% url 'accounts:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit">Log out</button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'accounts:login' %}">Log in</a></li>
+                    <li><a href="{% url 'accounts:register' %}">Register</a></li>
+                {% endif %}
+                {% endblock %}
+            </ul>
+        </nav>
+    </header>
     {% endblock %}
 
-    <main class="container my-4">
+    <main class="iq-container">
         {% block messages %}
         {% if messages %}
+        <div class="iq-messages" role="status">
             {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
                 {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             {% endfor %}
+        </div>
         {% endif %}
         {% endblock %}
 

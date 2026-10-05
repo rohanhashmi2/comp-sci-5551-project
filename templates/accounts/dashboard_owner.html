@@ -3,17 +3,48 @@
 {% block title %}Store owner dashboard — InspectIQ{% endblock %}
 
 {% block content %}
-<h1>Store owner dashboard</h1>
-<p>Welcome, {{ request.user.email }}.</p>
+<dl class="iq-letterhead">
+    <dt>From</dt>
+    <dd>InspectIQ Food Safety</dd>
+    <dt>To</dt>
+    <dd>{{ request.user.email }}</dd>
+    <dt>Date</dt>
+    <dd>{% now "l, j F Y" %}</dd>
+    <dt>Subject</dt>
+    <dd>Stores</dd>
+</dl>
 
-<h2 class="mt-4">Your stores</h2>
+<h1>Your stores</h1>
+
 {% if stores %}
-<ul>
+<ul class="iq-standing">
     {% for store in stores %}
-    <li>{{ store.name }} — {{ store.address }}</li>
+    <li>
+        <div>
+            <span class="iq-standing__store">{{ store.name }}</span>
+            <br>
+            <small class="text-muted">{{ store.address }}</small>
+        </div>
+        {% comment %}
+            TODO Story 10 (Dev 3): replace this hardcoded "No open tickets."
+            with a per-store open-Ticket count. The string becomes incorrect
+            the moment Ticket data exists. Pattern suggested in design
+            review:
+              - add `.annotate(open_ticket_count=...)` on the owner queryset
+                (view change), then render as either
+                  "No open tickets."
+                  "1 OPEN TICKET, due <deadline>." (iq-standing__state--open)
+                  "N OPEN TICKETS, next due <deadline>." (iq-standing__state--open)
+              - the `--open` modifier class is already in the stylesheet.
+        {% endcomment %}
+        <span class="iq-standing__state">No open tickets.</span>
+    </li>
     {% endfor %}
 </ul>
 {% else %}
-<p class="text-muted">No stores assigned to your account yet.</p>
+<div class="iq-empty">
+    <p class="iq-empty__headline">No stores on file.</p>
+    <p class="iq-empty__sub">An inspector will add your stores as they are enrolled.</p>
+</div>
 {% endif %}
 {% endblock %}
