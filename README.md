@@ -20,10 +20,30 @@ Each developer runs their own free Supabase project. Do not share credentials.
 
 1. Sign up at [supabase.com](https://supabase.com) with your school or personal email.
 2. Create a new project. Pick a region close to you.
-3. **Record the database password shown in the setup dialog.** It is not displayed again.
-4. Wait ~2 minutes for provisioning.
-5. In the dashboard: **Project Settings → Database → Connection string → Session pooler → URI**. Copy this string. It contains your password. Do not paste it into PRs, Slack, or shared docs.
-6. Check the Postgres major version so you can match it locally. Open the SQL editor and run:
+3. **Choose an alphanumeric database password** at the setup dialog. Avoid `#`, `?`, `@`, `/`, `&`, `=`, `:`, and spaces — these characters either need percent-encoding inside a URL or (in the case of `#`) break `.env` parsing by starting a comment mid-value. A long alphanumeric password avoids the whole class of problems.
+4. **Record the password.** It is not displayed again.
+5. Wait ~2 minutes for provisioning.
+6. **Get the connection string.** Click the **Connect** button in the dashboard's top bar (next to the project name). Supabase moved this out of *Project Settings → Database* some time ago — if you don't see Connect in the top bar, look for the plug/outlet icon in the same area. In the dialog that opens:
+   - Open the **ORMs** tab (or **Direct** tab — the strings are listed the same way under both). You will see three connection strings: *Direct connection*, *Transaction pooler*, *Session pooler*.
+   - **Use Session pooler.** Not Direct, not Transaction pooler.
+   - Three ways to confirm you have the right one:
+     - the host contains `pooler` (e.g. `aws-0-us-east-1.pooler.supabase.com`),
+     - the username is `postgres.<your-project-ref>` with a dot in it (not plain `postgres`),
+     - the port is `5432`.
+   - Keep the `?sslmode=require` query parameter at the end.
+   - Copy the full URI. It contains your password. Do not paste it into PRs, Slack, or shared docs.
+
+   **Why not Direct?** The Direct connection host (`db.<ref>.supabase.co`) is **IPv6-only** on newer Supabase projects. On any network without IPv6 (most campus Wi-Fi, many home ISPs, GitHub Actions default runners), `python manage.py migrate` fails with:
+   ```
+   could not translate host name "db.<ref>.supabase.co" to address:
+   nodename nor servname provided, or not known
+   ```
+   If you see that error, you grabbed the Direct string by mistake — switch to the Session pooler string and try again.
+
+   **Why not Transaction pooler?** It breaks Django's prepared-statement and long-lived-connection assumptions. Would need extra settings tweaks to work; not worth it when Session pooler just works.
+
+7. **Put the string in your `.env`** as `DATABASE_URL=...`. If your password contains any non-alphanumeric character despite step 3, wrap the whole value in double quotes (`DATABASE_URL="postgres://..."`) — `.env` parsing is otherwise permissive but a bare `#` in the password terminates the value and strips the rest of the line.
+8. Check the Postgres major version so you can match it locally. Open the SQL editor and run:
    ```sql
    SHOW server_version;
    ```
@@ -31,7 +51,7 @@ Each developer runs their own free Supabase project. Do not share credentials.
 
 ### B. Install local Postgres (for tests only)
 
-Match the Postgres major version to your Supabase project (from step A.6). In the commands below, substitute `<major>` with that number (e.g. `17`).
+Match the Postgres major version to your Supabase project (from step A.8). In the commands below, substitute `<major>` with that number (e.g. `17`).
 
 **macOS — option 1: Postgres.app** (installer with multiple bundled majors)
 - Download from [postgresapp.com](https://postgresapp.com).
@@ -110,7 +130,7 @@ Edit `.env`:
   ```bash
   python -c "import secrets; print(secrets.token_urlsafe(50))"
   ```
-- `DATABASE_URL` — paste your Supabase session-pooler URI from step A.5. Keep the `?sslmode=require` at the end.
+- `DATABASE_URL` — paste your Supabase session-pooler URI from step A.6. Keep the `?sslmode=require` at the end.
 - `TEST_DATABASE_URL` — your local Postgres URL.
   - macOS / Linux, after step B: `postgres://<your-os-username>@localhost:5432/inspectiq_dev` (macOS/Linux users can typically expand `$USER` in a shell, but write the literal username into `.env` — `.env` is not shell-expanded).
   - Windows (EDB installer): `postgres://postgres:<the-password-you-set-at-install>@localhost:5432/inspectiq_dev`.
