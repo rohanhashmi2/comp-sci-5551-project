@@ -7,10 +7,14 @@ User = get_user_model()
 @pytest.mark.django_db
 def test_user_can_be_created_with_each_role():
     inspector = User.objects.create_user(
-        username="ins1", password="pw-does-not-matter", role=User.Role.INSPECTOR
+        email="ins1@example.com",
+        password="pw-does-not-matter",
+        role=User.Role.INSPECTOR,
     )
     owner = User.objects.create_user(
-        username="own1", password="pw-does-not-matter", role=User.Role.OWNER
+        email="own1@example.com",
+        password="pw-does-not-matter",
+        role=User.Role.OWNER,
     )
 
     inspector.refresh_from_db()
@@ -18,3 +22,5 @@ def test_user_can_be_created_with_each_role():
 
     assert inspector.role == "INSPECTOR"
     assert owner.role == "OWNER"
+    assert inspector.email == "ins1@example.com"
+    assert User.USERNAME_FIELD == "email"

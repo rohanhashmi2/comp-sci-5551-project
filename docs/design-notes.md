@@ -72,8 +72,8 @@ below rests on the answers. If any of these change, expect ripple effects.
   workflow described in the project brief. If the team's stories carve up
   the domain differently, most of §3–§6 needs to be revisited.
 - **Does the grading rubric require a specific mapping between acceptance
-  criteria and test names?** §7 proposes `test_ac<NN>_*`; the team should
-  confirm this matches the rubric.
+  criteria and test names?** §7 uses `test_ac<NN>_<MM>_*` (story.criterion);
+  the team should confirm this matches the rubric.
 - **How does an inspection get created that has NA rows?** Is the inspector
   expected to explicitly mark items `NOT_APPLICABLE`, or do items default
   to that until the inspector touches them? Different UX; same schema.
@@ -417,16 +417,18 @@ column and `visible_to` are dumber and easier to reason about.
 - Tests colocated with the code they exercise:
   `apps/<app>/tests/test_<layer>.py` — `test_models.py`,
   `test_services.py`, `test_views.py`, `test_workflow.py`, `test_access.py`.
-- **Naming for AC-mapped tests:** `test_ac<NN>_<slug>`, e.g.
-  `test_ac03_inspector_flags_checklist_item_as_violation`. Confirm this
-  matches the grading rubric.
+- **Naming for AC-mapped tests:** `test_ac<NN>_<MM>_<slug>`, where `NN`
+  is the user-story number and `MM` is the acceptance-criterion number
+  within that story (both zero-padded to two digits). Example:
+  `test_ac01_03_password_mismatch_rejected` maps to AC 1.3 of US-1.
+  Confirm this matches the grading rubric.
 - **Docstring convention:** the Given/When/Then from
   `docs/acceptance_criteria.md` is copied verbatim into the test's
   docstring. This is how a grader traces test → criterion.
 - **Traceability check:** proposed `scripts/check_ac_coverage.py` (~30
-  lines) parses the AC document for `AC-NN` headings and greps the test
-  suite for a matching `test_acNN_` function. Missing means an AC has no
-  test. Run manually until CI is added.
+  lines) parses the AC document for `AC N.M` headings and greps the test
+  suite for a matching `test_acNN_MM_` function. Missing means an AC has
+  no test. Run manually until CI is added.
 - **Fixtures:** proposed to use `factory-boy` (`UserFactory`,
   `StoreFactory`, etc.). Cuts fixture boilerplate. Alternative is plain
   pytest fixtures; workable at this size but repetitive.
@@ -515,8 +517,8 @@ recording PASS/FAIL/NA outcomes across every checklist item with a photo
 attached to each FAIL. On submit, a ticket appears in the owner's queue
 with a deadline. The owner uploads evidence against a specific failed
 item. The inspector accepts it; the ticket's derived status flips to
-CLOSED. Every acceptance criterion driving that flow has a `test_ac<NN>_*`
-test.
+CLOSED. Every acceptance criterion driving that flow has a
+`test_ac<NN>_<MM>_*` test.
 
 ### Sprint 2 — weeks 9–12: all basic features
 
