@@ -434,6 +434,29 @@ column and `visible_to` are dumber and easier to reason about.
   pytest fixtures; workable at this size but repetitive.
 - **Database:** tests run against a **local Postgres**, not Supabase (§12).
 
+### Sprint report — implementation-table conventions
+
+When filling the Sprint 1 report's implementation tables, follow these
+rules so the three developers' entries read the same way:
+
+- **"Class Name(s) of the Test Code" column:** put the **test file name**
+  (e.g. `apps/accounts/tests/test_registration.py`). Our tests are
+  module-level pytest functions, not `unittest.TestCase` classes — there
+  is no class name to list. Put the test function name in the adjacent
+  column.
+- **"Notes" column — inherited behaviour:** where an acceptance criterion
+  is satisfied by a Django class or method we did not override, say so
+  and name the inherited method. Example: AC 1.3 is satisfied by
+  `UserCreationForm.clean_password2` which we inherit without override;
+  the Notes column should state that explicitly.
+- **Status values:** exactly one of `completed` / `inProgress` / `toDo`.
+  Case-sensitive. No other values and no synonyms.
+- **Supporting tests that do not map to an acceptance criterion** (for
+  example `test_ac02_03_04_response_equivalence`, or
+  `test_direct_post_with_inspector_owner_rejected`) go into the report's
+  **"other tests" table**, never duplicated against an AC. An AC's row
+  references only the test that is 1:1 with that criterion.
+
 ---
 
 ## 8. Proposed work distribution — three roughly equal tracks

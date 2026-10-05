@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "django_bootstrap5",
     "apps.accounts.apps.AccountsConfig",
     "apps.common.apps.CommonConfig",
+    "apps.stores.apps.StoresConfig",
 ]
 
 MIDDLEWARE = [
