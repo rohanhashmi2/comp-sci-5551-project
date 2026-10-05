@@ -1,0 +1,134 @@
+[
+  {
+    "model": "inspections.checklistitem",
+    "pk": 1,
+    "fields": {
+      "code": "FS-01",
+      "title": "Cold food held at or below 41°F (5°C)",
+      "description": "Verify refrigeration units and cold-held items with a calibrated probe thermometer during the inspection.",
+      "is_active": true,
+      "ordering": 10
+    }
+  },
+  {
+    "model": "inspections.checklistitem",
+    "pk": 2,
+    "fields": {
+      "code": "FS-02",
+      "title": "Hot food held at or above 135°F (57°C)",
+      "description": "Verify steam tables, bain-maries and hot-holding equipment with a probe thermometer.",
+      "is_active": true,
+      "ordering": 20
+    }
+  },
+  {
+    "model": "inspections.checklistitem",
+    "pk": 3,
+    "fields": {
+      "code": "FS-03",
+      "title": "Thermometer available and calibrated within last 30 days",
+      "description": "Calibration log present, dated and signed by the responsible staff member.",
+      "is_active": true,
+      "ordering": 30
+    }
+  },
+  {
+    "model": "inspections.checklistitem",
+    "pk": 4,
+    "fields": {
+      "code": "FS-04",
+      "title": "No evidence of cross-contamination between raw and ready-to-eat foods",
+      "description": "Separate cutting boards, utensils and prep surfaces in use. Raw proteins stored below ready-to-eat items in refrigeration.",
+      "is_active": true,
+      "ordering": 40
+    }
+  },
+  {
+    "model": "inspections.checklistitem",
+    "pk": 5,
+    "fields": {
+      "code": "HG-01",
+      "title": "Handwashing station stocked",
+      "description": "Soap, single-use paper towels and running hot water (at least 100°F / 38°C) available at every handwashing sink.",
+      "is_active": true,
+      "ordering": 50
+    }
+  },
+  {
+    "model": "inspections.checklistitem",
+    "pk": 6,
+    "fields": {
+      "code": "HG-02",
+      "title": "Staff with visible illness symptoms excluded from food handling",
+      "description": "Vomiting, diarrhea, jaundice, open sores on hands or arms disqualify a staff member from handling food until symptoms resolve.",
+      "is_active": true,
+      "ordering": 60
+    }
+  },
+  {
+    "model": "inspections.checklistitem",
+    "pk": 7,
+    "fields": {
+      "code": "HG-03",
+      "title": "Hair restraints and clean outer garments in food-prep areas",
+      "description": "Hair restraints worn by all food-prep staff. Outer garments visibly clean and changed between tasks when soiled.",
+      "is_active": true,
+      "ordering": 70
+    }
+  },
+  {
+    "model": "inspections.checklistitem",
+    "pk": 8,
+    "fields": {
+      "code": "CL-01",
+      "title": "Food-contact surfaces clean and sanitized to schedule",
+      "description": "Food-contact surfaces visibly clean and sanitized at the frequency on the posted sanitation schedule.",
+      "is_active": true,
+      "ordering": 80
+    }
+  },
+  {
+    "model": "inspections.checklistitem",
+    "pk": 9,
+    "fields": {
+      "code": "CL-02",
+      "title": "Floors, walls, ceilings and under-equipment free of debris and pests",
+      "description": "No standing debris, grease, droppings, egg casings, or live insect activity in any food-prep or storage area.",
+      "is_active": true,
+      "ordering": 90
+    }
+  },
+  {
+    "model": "inspections.checklistitem",
+    "pk": 10,
+    "fields": {
+      "code": "CL-03",
+      "title": "Waste containers covered and emptied before overflowing",
+      "description": "Tight-fitting lids in use on all food-area waste. Dumpster corral clean and free of standing liquid.",
+      "is_active": true,
+      "ordering": 100
+    }
+  },
+  {
+    "model": "inspections.checklistitem",
+    "pk": 11,
+    "fields": {
+      "code": "DC-01",
+      "title": "Current food-handler certifications available",
+      "description": "Current food-handler certifications posted or available on request for every staff member handling food.",
+      "is_active": true,
+      "ordering": 110
+    }
+  },
+  {
+    "model": "inspections.checklistitem",
+    "pk": 12,
+    "fields": {
+      "code": "DC-02",
+      "title": "Pest-control service log for last 90 days",
+      "description": "Pest-control service log available for the last 90 days, signed by a licensed pest-control operator.",
+      "is_active": true,
+      "ordering": 120
+    }
+  }
+]

@@ -34,6 +34,7 @@ class Inspection(models.Model):
         related_name="inspections",
     )
     scheduled_for = models.DateTimeField()
+    started_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(
         max_length=32,
         choices=Status.choices,
@@ -61,3 +62,70 @@ class Inspection(models.Model):
 
     def __str__(self):
         return f"{self.store} — {self.scheduled_for:%Y-%m-%d %H:%M}"
+
+
+class ChecklistItem(models.Model):
+    code = models.CharField(max_length=16, unique=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    is_active = models.BooleanField(default=True)
+    ordering = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["ordering", "code"]
+
+    def __str__(self):
+        return f"{self.code} — {self.title}"
+
+
+class InspectionResultManager(models.Manager):
+    def visible_to(self, user):
+        if not user.is_authenticated:
+            return self.none()
+        if user.role == "INSPECTOR":
+            return self.all()
+        if user.role == "OWNER":
+            return self.filter(inspection__store__owner=user)
+        return self.none()
+
+
+class InspectionResult(models.Model):
+    class Outcome(models.TextChoices):
+        PASS = "PASS", "Pass"
+        FAIL = "FAIL", "Fail"
+        NOT_APPLICABLE = "NOT_APPLICABLE", "Not applicable"
+
+    inspection = models.ForeignKey(
+        Inspection,
+        on_delete=models.CASCADE,
+        related_name="results",
+    )
+    checklist_item = models.ForeignKey(
+        ChecklistItem,
+        on_delete=models.PROTECT,
+        related_name="+",
+    )
+    outcome = models.CharField(max_length=16, choices=Outcome.choices)
+    # comment and photo ship with the schema now (blank/null) so Dev 2's
+    # Stories 7 and 8 only need to extend the form + add clean() checks,
+    # not a new migration per story.
+    comment = models.TextField(blank=True)
+    photo = models.ImageField(upload_to="results/%Y/%m/", blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = InspectionResultManager()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["inspection", "checklist_item"],
+                name="one_result_per_item_per_inspection",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(outcome__in=["PASS", "FAIL", "NOT_APPLICABLE"]),
+                name="result_outcome_valid",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.checklist_item.code}: {self.get_outcome_display()}"

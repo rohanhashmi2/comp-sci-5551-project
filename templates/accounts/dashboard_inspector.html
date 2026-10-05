@@ -20,6 +20,7 @@
             <th>Store</th>
             <th>When</th>
             <th>Status</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -28,6 +29,12 @@
             <td>{{ inspection.store.name }}</td>
             <td>{{ inspection.scheduled_for|date:"Y-m-d H:i" }}</td>
             <td>{{ inspection.get_status_display }}</td>
+            <td>
+                {% if inspection.status == "SCHEDULED" %}
+                <a href="{% url 'inspections:conduct' inspection.pk %}"
+                   class="btn btn-sm btn-outline-primary">Conduct</a>
+                {% endif %}
+            </td>
         </tr>
     {% endfor %}
     </tbody>
