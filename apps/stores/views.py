@@ -14,6 +14,9 @@ class StoreListView(LoginRequiredMixin, InspectorRequiredMixin, ListView):
     template_name = "stores/store_list.html"
     context_object_name = "stores"
 
+    def get_queryset(self):
+        return Store.objects.visible_to(self.request.user)
+
 
 class StoreCreateView(LoginRequiredMixin, InspectorRequiredMixin, CreateView):
     model = Store

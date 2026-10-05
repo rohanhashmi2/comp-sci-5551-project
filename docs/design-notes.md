@@ -64,6 +64,51 @@ below rests on the answers. If any of these change, expect ripple effects.
     policy. Consequently the model has no `severity` field on failed items.
 13. **Tests run against local Postgres; the app runs against Supabase.**
     See §12. This divergence is a known risk to re-check before each demo.
+14. **Inspectors have unscoped store visibility; stores are not "assigned"
+    to inspectors.** Any inspector can see any store, any inspection, and
+    any ticket. The `Store` model has no inspector FK; owner-side scoping
+    (owners see only their own stores) is enforced by
+    `Store.objects.visible_to(user)`. See the note below on AC rewording —
+    Dev 2 and Dev 3 should check their own criteria for the same drafting
+    error.
+
+#### Note: AC rewording in US-4 (US-4 AC 4.1 and AC 4.2)
+
+Story 4's original acceptance criteria were phrased in terms of stores
+being "assigned to" an inspector:
+
+> AC 4.1 (original): Given an inspector is logged in and two stores are
+> assigned to them…
+>
+> AC 4.2 (original): Given an inspector is logged in and a store is
+> assigned to a different inspector…
+
+That wording implies a feature — inspector-to-store assignment — that the
+project brief does not request and that the design (§3 `Store` model,
+assumption 14 above) does not include. The brief itself is explicit that
+inspectors can view inspection history of **any** store. Story 3
+accordingly chose option (a) in its plan: no inspector FK on `Store`.
+
+Story 4 therefore reworded AC 4.1 and AC 4.2 to match the actual design:
+
+> **AC 4.1 (rewritten): Inspector sees all stores.** Given an inspector
+> is logged in and two stores exist. When the inspector opens the store
+> list. Then both stores are listed with their name and address.
+>
+> **AC 4.2 (rewritten): Store list spans all owners.** Given an
+> inspector is logged in and one store exists owned by one store owner,
+> and another store exists owned by a different store owner. When the
+> inspector opens the store list. Then both stores are listed.
+
+AC 4.2's new wording is the symmetric partner of AC 4.4: AC 4.4 proves
+owner-side scoping is active; AC 4.2 proves inspector-side scoping is
+*not* active.
+
+**Flag for Dev 2 and Dev 3:** your own stories' acceptance criteria may
+carry the same drafting error — phrases like "the inspections assigned
+to me" or "the tickets assigned to me." If so, reword to match the
+unscoped-inspector-visibility design rather than adding an assignment
+feature. Raise it before implementation starts, not after.
 
 ### Genuinely open questions
 
