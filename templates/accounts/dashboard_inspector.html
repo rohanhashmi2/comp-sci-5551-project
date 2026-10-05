@@ -5,5 +5,11 @@
 {% block content %}
 <h1>Inspector dashboard</h1>
 <p>Welcome, {{ request.user.email }}.</p>
-<p class="text-muted">Scheduled inspections will appear here (Story 6).</p>
+
+<div class="mt-4">
+    <a href="{% url 'stores:add' %}" class="btn btn-primary">Add store</a>
+    <a href="{% url 'stores:list' %}" class="btn btn-outline-secondary">View all stores</a>
+</div>
+
+<p class="text-muted mt-4">Scheduled inspections will appear here (Story 6).</p>
 {% endblock %}

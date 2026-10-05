@@ -17,6 +17,11 @@
                 <ul class="navbar-nav ms-auto">
                     {% block nav_items %}
                     {% if request.user.is_authenticated %}
+                        {% if request.user.role == "INSPECTOR" %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'stores:list' %}">Stores</a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
                             <span class="nav-link disabled">{{ request.user.email }}</span>
                         </li>
