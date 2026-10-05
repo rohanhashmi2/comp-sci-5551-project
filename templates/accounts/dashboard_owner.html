@@ -5,5 +5,15 @@
 {% block content %}
 <h1>Store owner dashboard</h1>
 <p>Welcome, {{ request.user.email }}.</p>
-<p class="text-muted">Your stores will appear here (Story 4).</p>
+
+<h2 class="mt-4">Your stores</h2>
+{% if stores %}
+<ul>
+    {% for store in stores %}
+    <li>{{ store.name }} — {{ store.address }}</li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="text-muted">No stores assigned to your account yet.</p>
+{% endif %}
 {% endblock %}
