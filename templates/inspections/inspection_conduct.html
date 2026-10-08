@@ -82,6 +82,21 @@
                 {% endif %}
             {% endfor %}
         </div>
+
+        <!-- Story 7 - Jacob M -->
+
+        <div>
+            <span>Comments: </span>
+            {{ form.comment }}
+
+            {% for error in form.comment.errors %}
+                <p class="text-danger">{{ error }}</p>
+            {% endfor %}
+
+
+            <!-- <p>Image Upload: </p>
+            {{ form.photo }} -->
+        </div>
     </article>
     {% endfor %}
 

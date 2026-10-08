@@ -110,7 +110,7 @@ class InspectionResult(models.Model):
     # Stories 7 and 8 only need to extend the form + add clean() checks,
     # not a new migration per story.
     comment = models.TextField(blank=True)
-    photo = models.ImageField(upload_to="results/%Y/%m/", blank=True, null=True)
+    photo = models.ImageField(null=True, blank=True, upload_to="results/%Y/%m/")
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = InspectionResultManager()
