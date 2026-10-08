@@ -46,9 +46,37 @@ class InspectionResultForm(forms.ModelForm):
         required=True,
     )
 
+    comment = forms.CharField(
+        widget=forms.Textarea,
+        required=False,
+    )
+
+    photo = forms.ImageField(
+        required=False
+    )
+
+
+    # JACOB M - extend below to include comment and photo field
+
     class Meta:
         model = InspectionResult
-        fields = ("outcome",)
+        fields = ["outcome", "comment",]
+
+    # testing below code for comment requirements:
+    def clean(self):
+        cleaned_data = super().clean()
+
+        outcome = cleaned_data.get("outcome")
+        comment = (cleaned_data.get("comment") or "").strip()
+
+        if outcome == InspectionResult.Outcome.FAIL and not comment:
+            raise forms.ValidationError(
+                {
+                    "comment": "A comment is required when an item fails."
+                }
+            )
+
+        return cleaned_data
 
 
 class BaseInspectionResultFormSet(BaseModelFormSet):

@@ -116,6 +116,7 @@ class InspectionConductView(LoginRequiredMixin, InspectorRequiredMixin, View):
                     inspection=inspection,
                     checklist_item=item,
                     outcome=form.cleaned_data["outcome"],
+                    comment=form.cleaned_data["comment"]
                 )
             transitions.apply(inspection, "begin")
             inspection.started_at = timezone.now()
