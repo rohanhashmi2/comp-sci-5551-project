@@ -75,6 +75,13 @@ class InspectionResultForm(forms.ModelForm):
                     "A comment is required when an item fails."
                 )
 
+            if photo:
+                print(photo.size)
+                if photo.size > (5 * 1024 * 1024):
+                    self.add_error(
+                        "photo",
+                        "A photo cannot be larger than 5MB."
+                    )
 
             if not photo:
                 self.add_error(
