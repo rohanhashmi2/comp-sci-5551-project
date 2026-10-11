@@ -56,26 +56,39 @@ class InspectionResultForm(forms.ModelForm):
     )
 
 
-    # JACOB M - extend below to include comment and photo field
-
     class Meta:
         model = InspectionResult
-        fields = ["outcome", "comment",]
+        fields = ["outcome", "comment", "photo"]
 
-    # testing below code for comment requirements:
     def clean(self):
         cleaned_data = super().clean()
 
         outcome = cleaned_data.get("outcome")
         comment = (cleaned_data.get("comment") or "").strip()
+        photo = cleaned_data.get("photo")
 
-        if outcome == InspectionResult.Outcome.FAIL and not comment:
-            raise forms.ValidationError(
-                {
-                    "comment": "A comment is required when an item fails."
-                }
-            )
+        if outcome == InspectionResult.Outcome.FAIL:
 
+            if not comment:
+                self.add_error(
+                    "comment",
+                    "A comment is required when an item fails."
+                )
+
+            if photo:
+                print(photo.size)
+                if photo.size > (5 * 1024 * 1024):
+                    self.add_error(
+                        "photo",
+                        "A photo cannot be larger than 5MB."
+                    )
+
+            if not photo:
+                self.add_error(
+                    "photo",
+                    "A photo is required when an item fails."
+                )
+          
         return cleaned_data
 
 

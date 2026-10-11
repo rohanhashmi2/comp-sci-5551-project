@@ -10,7 +10,7 @@
     Scheduled {{ inspection.scheduled_for|date:"l, j F Y · H:i" }} · {{ inspection.store.address }}
 </p>
 
-<form method="post" novalidate>
+<form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
     {{ formset.management_form }}
 
@@ -83,8 +83,6 @@
             {% endfor %}
         </div>
 
-        <!-- Story 7 - Jacob M -->
-
         <div>
             <span>Comments: </span>
             {{ form.comment }}
@@ -94,8 +92,14 @@
             {% endfor %}
 
 
-            <!-- <p>Image Upload: </p>
-            {{ form.photo }} -->
+            <p>Image Upload: </p>
+            {{ form.photo }}
+
+            {% for error in form.photo.errors %}
+                <p class="text-danger">{{ error }}</p>
+            {% endfor %}
+
+
         </div>
     </article>
     {% endfor %}
