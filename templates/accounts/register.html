@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block title %}Register — InspectIQ{% endblock %}
+
+{% block content %}
+<div class="iq-form-column">
+    <h1>Register</h1>
+    <p class="text-muted mb-4">
+        Pick the role you perform. Inspectors conduct inspections. Store
+        owners read tickets and submit evidence.
+    </p>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        {% bootstrap_button "Create account" button_type="submit" button_class="btn-primary" %}
+    </form>
+</div>
+{% endblock %}
