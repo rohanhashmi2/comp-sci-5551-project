@@ -7,6 +7,7 @@ from django.views.generic import CreateView, RedirectView, TemplateView
 
 from apps.inspections.models import Inspection
 from apps.stores.models import Store
+from apps.tickets.models import Ticket
 
 from .forms import EmailAuthenticationForm, RegistrationForm
 from .models import User
@@ -72,4 +73,10 @@ class OwnerDashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["stores"] = Store.objects.visible_to(self.request.user)
+
+        ctx["tickets"] = Ticket.objects.filter(
+            store__owner = self.request.user,
+            status = Ticket.Status.OPEN,
+        )
+
         return ctx

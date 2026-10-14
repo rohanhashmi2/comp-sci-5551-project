@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+
+{% block content %}
+<h1>Open Tickets</h1>
+
+{% for ticket in tickets %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h3>{{ ticket.title }}</h3>
+
+            <p>{{ ticket.description }}</p>
+
+            <p>
+                Store: {{ ticket.store.name }}
+            </p>
+
+            <p>
+                Status: {{ ticket.get_status_display }}
+            </p>
+
+            <p>
+                Created: {{ ticket.created_at }}
+            </p>
+
+            <p>
+                Deadline: {{ ticket.inspection_result.deadline }}
+            </p>
+
+            <div>
+                <p>Inspection Photo:</p>
+                    <img
+                    src="../../{{ ticket.inspection_result.photo.url }}"
+                    alt="Inspection photo"
+                    style="max-width: 500px; height: auto;"
+                    >
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <p>No open tickets.</p>
+{% endfor %}
+
+{% endblock %}
