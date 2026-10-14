@@ -106,12 +106,13 @@ class InspectionResult(models.Model):
         related_name="+",
     )
     outcome = models.CharField(max_length=16, choices=Outcome.choices)
-    # comment and photo ship with the schema now (blank/null) so Dev 2's
-    # Stories 7 and 8 only need to extend the form + add clean() checks,
-    # not a new migration per story.
     comment = models.TextField(blank=True)
     photo = models.ImageField(null=True, blank=True, upload_to="results/%Y/%m/")
     created_at = models.DateTimeField(auto_now_add=True)
+    deadline = models.DateTimeField(
+        null = True,
+        blank = True
+    )
 
     objects = InspectionResultManager()
 

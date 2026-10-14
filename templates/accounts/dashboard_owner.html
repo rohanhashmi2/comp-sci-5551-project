@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% include "tickets/owner_ticket_list.html" %}
 
 {% block title %}Store owner dashboard — InspectIQ{% endblock %}
 
@@ -25,19 +26,13 @@
             <br>
             <small class="text-muted">{{ store.address }}</small>
         </div>
-        {% comment %}
-            TODO Story 10 (Dev 3): replace this hardcoded "No open tickets."
-            with a per-store open-Ticket count. The string becomes incorrect
-            the moment Ticket data exists. Pattern suggested in design
-            review:
-              - add `.annotate(open_ticket_count=...)` on the owner queryset
-                (view change), then render as either
-                  "No open tickets."
-                  "1 OPEN TICKET, due <deadline>." (iq-standing__state--open)
-                  "N OPEN TICKETS, next due <deadline>." (iq-standing__state--open)
-              - the `--open` modifier class is already in the stylesheet.
-        {% endcomment %}
-        <span class="iq-standing__state">No open tickets.</span>
+        {% if tickets %}
+        <a href="{% url 'tickets:owner_ticket_list' %}" class="btn btn-primary">
+            View Open Tickets ({{ tickets.count }})
+        </a>
+        {% else %}
+        <p>No open tickets.</p>
+        {% endif %}
     </li>
     {% endfor %}
 </ul>

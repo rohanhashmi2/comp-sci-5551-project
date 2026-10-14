@@ -17,6 +17,7 @@ from .forms import (
     InspectionScheduleForm,
 )
 from .models import ChecklistItem, Inspection, InspectionResult
+from apps.tickets.models import Ticket
 
 
 class InspectionCreateView(LoginRequiredMixin, InspectorRequiredMixin, CreateView):
@@ -116,13 +117,25 @@ class InspectionConductView(LoginRequiredMixin, InspectorRequiredMixin, View):
 
         with transaction.atomic():
             for form, item in zip(formset.forms, active):
-                InspectionResult.objects.create(
+                result = InspectionResult.objects.create(
                     inspection=inspection,
                     checklist_item=item,
                     outcome=form.cleaned_data["outcome"],
                     comment=form.cleaned_data["comment"],
-                    photo=form.cleaned_data["photo"]
+                    photo=form.cleaned_data["photo"],
+                    deadline=form.cleaned_data["deadline"]
                 )
+
+                if result.outcome == InspectionResult.Outcome.FAIL:
+                    Ticket.objects.create(
+                    inspection=inspection,
+                    inspection_result=result,
+                    store=inspection.store,
+                    created_by=request.user,
+                    title=f"Failed Inspection Item: {item.code}",
+                    description=result.comment,
+                )
+                
             transitions.apply(inspection, "begin")
             inspection.started_at = timezone.now()
             inspection.save(update_fields=["status", "started_at"])

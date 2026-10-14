@@ -55,10 +55,16 @@ class InspectionResultForm(forms.ModelForm):
         required=False
     )
 
+    deadline = forms.DateTimeField(
+        widget=forms.DateTimeInput(
+            attrs={"type": "datetime-local"}
+        ),
+        required = False
+    )
 
     class Meta:
         model = InspectionResult
-        fields = ["outcome", "comment", "photo"]
+        fields = ["outcome", "comment", "photo", "deadline"]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -66,6 +72,7 @@ class InspectionResultForm(forms.ModelForm):
         outcome = cleaned_data.get("outcome")
         comment = (cleaned_data.get("comment") or "").strip()
         photo = cleaned_data.get("photo")
+        deadline = cleaned_data.get("deadline")
 
         if outcome == InspectionResult.Outcome.FAIL:
 
@@ -87,6 +94,19 @@ class InspectionResultForm(forms.ModelForm):
                 self.add_error(
                     "photo",
                     "A photo is required when an item fails."
+                )
+
+            if deadline:
+                if deadline <= timezone.now():
+                    self.add_error(
+                        "deadline",
+                        "Deadline must be scheduled in the future."
+                    )
+
+            if not deadline:
+                self.add_error(
+                    "deadline",
+                    "A deadline is required when an item fails."
                 )
           
         return cleaned_data
