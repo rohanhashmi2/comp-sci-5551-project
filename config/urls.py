@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
@@ -15,8 +17,6 @@ urlpatterns = [
     path("", HomeView.as_view(), name="home"),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(
-        settings.MEDIA_URL,
-        document_root=settings.MEDIA_ROOT,
-    )
+# Serves uploaded inspection and evidence photos under runserver.
+# static() returns no patterns when DEBUG is off.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

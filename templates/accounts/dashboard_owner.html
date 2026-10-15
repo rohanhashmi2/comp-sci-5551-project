@@ -25,6 +25,8 @@
             <span class="iq-standing__store">{{ store.name }}</span>
             <br>
             <small class="text-muted">{{ store.address }}</small>
+            <br>
+            <small><a href="{% url 'stores:history' store.pk %}">Inspection history</a></small>
         </div>
         {% if tickets %}
         <a href="{% url 'tickets:owner_ticket_list' %}" class="btn btn-primary">

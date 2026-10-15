@@ -8,7 +8,7 @@
 {% for ticket in tickets %}
     <div class="card mb-3">
         <div class="card-body">
-            <h3>{{ ticket.title }}</h3>
+            <h3><a href="{% url 'tickets:detail' ticket.pk %}">{{ ticket.title }}</a></h3>
 
             <p>{{ ticket.description }}</p>
 
@@ -31,7 +31,7 @@
             <div>
                 <p>Inspection Photo:</p>
                     <img
-                    src="../../{{ ticket.inspection_result.photo.url }}"
+                    src="{{ ticket.inspection_result.photo.url }}"
                     alt="Inspection photo"
                     style="max-width: 500px; height: auto;"
                     >

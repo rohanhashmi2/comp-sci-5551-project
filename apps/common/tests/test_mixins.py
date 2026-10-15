@@ -5,7 +5,7 @@ from django.urls import path, reverse
 from django.views.generic import View
 
 from apps.accounts.models import User
-from apps.common.mixins import InspectorRequiredMixin
+from apps.common.mixins import InspectorRequiredMixin, OwnerRequiredMixin
 from config.urls import urlpatterns as project_urlpatterns
 
 
@@ -64,4 +64,40 @@ def test_inspector_required_mixin_redirects_anonymous_to_login(client):
     response = client.get(reverse("probe"))
     assert response.status_code == 302
     # Falls through to LoginRequiredMixin → LOGIN_URL.
+    assert response.url.startswith(reverse("accounts:login"))
+
+
+class _OwnerProbeView(LoginRequiredMixin, OwnerRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        return HttpResponse("ok")
+
+
+urlpatterns.append(
+    path("__owner_probe__/", _OwnerProbeView.as_view(), name="owner_probe")
+)
+
+
+@pytest.mark.urls("apps.common.tests.test_mixins")
+@pytest.mark.django_db
+def test_owner_required_mixin_allows_owner(client, owner):
+    client.force_login(owner)
+    response = client.get(reverse("owner_probe"))
+    assert response.status_code == 200
+    assert response.content == b"ok"
+
+
+@pytest.mark.urls("apps.common.tests.test_mixins")
+@pytest.mark.django_db
+def test_owner_required_mixin_redirects_inspector_to_home(client, inspector):
+    client.force_login(inspector)
+    response = client.get(reverse("owner_probe"))
+    assert response.status_code == 302
+    assert response.url == reverse("home")
+
+
+@pytest.mark.urls("apps.common.tests.test_mixins")
+@pytest.mark.django_db
+def test_owner_required_mixin_redirects_anonymous_to_login(client):
+    response = client.get(reverse("owner_probe"))
+    assert response.status_code == 302
     assert response.url.startswith(reverse("accounts:login"))

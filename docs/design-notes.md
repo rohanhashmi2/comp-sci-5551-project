@@ -142,6 +142,32 @@ owner-side denial of the conducting flow, mirroring AC 5.4's shape:
 The replacement proves that owners cannot conduct inspections even
 against stores they own, which the project brief explicitly requires.
 
+#### Note: AC rewording in US-11 (US-11 AC 11.1 and AC 11.2)
+
+Story 9 as built issues **one ticket per failed checklist result**
+(`Ticket.inspection_result` is a `OneToOneField`), with the correction
+deadline stored on the failed `InspectionResult`, rather than one ticket
+per inspection as assumptions 1 and 2 proposed. A ticket therefore
+carries exactly one violation, and AC 11.1's "a ticket … with two failed
+items" cannot occur. Story 11 reworded both criteria to match:
+
+> **AC 11.1 (rewritten): Ticket detail shows the violation.** Given a
+> store owner is logged in and a ticket has been issued against their
+> store for a failed item. When the store owner opens that ticket. Then
+> the failed checklist item is displayed with its comment and photo and
+> the correction deadline is displayed.
+>
+> **AC 11.2 (rewritten): Passed items are not shown as violations.**
+> Given tickets have been issued from an inspection containing both
+> passed and failed items. When the store owner opens each ticket. Then
+> only failed items are shown as violations.
+
+Consequences for Stories 12–14: evidence attaches to a `Ticket`;
+accepting evidence moves the stored `Ticket.status` from `OPEN` to
+`RESOLVED`, rejecting leaves it `OPEN`. Story 9's conduct view leaves an
+inspection `IN_PROGRESS` once its checklist is recorded, so the store
+history (Story 14) lists every inspection past `SCHEDULED`.
+
 ### Genuinely open questions
 
 - **What are the actual user stories?** Everything below is speculative
@@ -877,6 +903,9 @@ One-line reference. If none of these fits what you're building, add a new one in
 | `.iq-chip`           | Inline mono-uppercase status label. Modifier `.iq-chip--stamp` for stamp colour. See §14.5 for rules. |
 | `.iq-section-title`  | A section heading styled as uppercase mono with a 2px rule beneath it. For subsidiary sections on a page. |
 | `.iq-form-column`    | Form-only pages (login, register, add store, schedule inspection). 480px max-width, flush-left. |
+| `.iq-violations` / `.iq-violation` | The `<ol>` of failed items on the ticket detail page (Story 11). Each `<li>` carries code, title, a resolved/unresolved chip, the inspector's comment and photo. Rule-separated, not carded. |
+| `.iq-evidence`       | The `<ul>` of evidence rows under a violation (Stories 12–13): thumbnail (`.iq-photo--thumb`), submitted time, review chip, note. `.iq-evidence__form` holds the owner's upload form or the inspector's review form. |
+| `.iq-photo`          | An inspection or evidence photo. Max 320px tall; `--thumb` modifier for 160×120 evidence thumbnails. |
 
 Utilities also in the sheet: `.iq-section-rule` (horizontal rule), `.iq-sr-only` (visually hidden but screen-reader readable), `.iq-mono` (mono+uppercase inline).
 

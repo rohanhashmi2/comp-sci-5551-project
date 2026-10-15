@@ -109,10 +109,7 @@ class InspectionResult(models.Model):
     comment = models.TextField(blank=True)
     photo = models.ImageField(null=True, blank=True, upload_to="results/%Y/%m/")
     created_at = models.DateTimeField(auto_now_add=True)
-    deadline = models.DateTimeField(
-        null = True,
-        blank = True
-    )
+    deadline = models.DateTimeField(null=True, blank=True)
 
     objects = InspectionResultManager()
 

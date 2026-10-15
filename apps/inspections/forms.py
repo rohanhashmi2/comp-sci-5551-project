@@ -83,7 +83,6 @@ class InspectionResultForm(forms.ModelForm):
                 )
 
             if photo:
-                print(photo.size)
                 if photo.size > (5 * 1024 * 1024):
                     self.add_error(
                         "photo",

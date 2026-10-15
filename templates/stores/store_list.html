@@ -12,6 +12,7 @@
             <th>Name</th>
             <th>Address</th>
             <th>Owner</th>
+            <th><span class="iq-sr-only">History</span></th>
         </tr>
     </thead>
     <tbody>
@@ -20,6 +21,7 @@
             <td>{{ store.name }}</td>
             <td>{{ store.address }}</td>
             <td>{{ store.owner.email }}</td>
+            <td><a href="{% url 'stores:history' store.pk %}">History</a></td>
         </tr>
     {% endfor %}
     </tbody>
