@@ -142,6 +142,32 @@ owner-side denial of the conducting flow, mirroring AC 5.4's shape:
 The replacement proves that owners cannot conduct inspections even
 against stores they own, which the project brief explicitly requires.
 
+#### Note: AC rewording in US-11 (US-11 AC 11.1 and AC 11.2)
+
+Story 9 as built issues **one ticket per failed checklist result**
+(`Ticket.inspection_result` is a `OneToOneField`), with the correction
+deadline stored on the failed `InspectionResult`, rather than one ticket
+per inspection as assumptions 1 and 2 proposed. A ticket therefore
+carries exactly one violation, and AC 11.1's "a ticket … with two failed
+items" cannot occur. Story 11 reworded both criteria to match:
+
+> **AC 11.1 (rewritten): Ticket detail shows the violation.** Given a
+> store owner is logged in and a ticket has been issued against their
+> store for a failed item. When the store owner opens that ticket. Then
+> the failed checklist item is displayed with its comment and photo and
+> the correction deadline is displayed.
+>
+> **AC 11.2 (rewritten): Passed items are not shown as violations.**
+> Given tickets have been issued from an inspection containing both
+> passed and failed items. When the store owner opens each ticket. Then
+> only failed items are shown as violations.
+
+Consequences for Stories 12–14: evidence attaches to a `Ticket`;
+accepting evidence moves the stored `Ticket.status` from `OPEN` to
+`RESOLVED`, rejecting leaves it `OPEN`. Story 9's conduct view leaves an
+inspection `IN_PROGRESS` once its checklist is recorded, so the store
+history (Story 14) lists every inspection past `SCHEDULED`.
+
 ### Genuinely open questions
 
 - **What are the actual user stories?** Everything below is speculative

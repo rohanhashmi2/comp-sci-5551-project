@@ -1,8 +1,7 @@
 from django.conf import settings
 from django.db import models
-from django.db.models import Exists, OuterRef
 
-from apps.inspections.models import InspectionResult
+from apps.inspections.models import Inspection, InspectionResult
 
 
 class TicketManager(models.Manager):
@@ -20,57 +19,62 @@ class TicketManager(models.Manager):
         if user.role == "INSPECTOR":
             return self.all()
         if user.role == "OWNER":
-            return self.filter(inspection__store__owner=user)
+            return self.filter(store__owner=user)
         return self.none()
 
 
 class Ticket(models.Model):
+    """One ticket per failed checklist result (created by Story 9's conduct view).
+
+    The correction deadline lives on the failed ``InspectionResult``.
+    """
+
     class Status(models.TextChoices):
         OPEN = "OPEN", "Open"
+        IN_PROGRESS = "IN_PROGRESS", "In Progress"
+        RESOLVED = "RESOLVED", "Resolved"
         CLOSED = "CLOSED", "Closed"
 
-    inspection = models.OneToOneField(
-        "inspections.Inspection",
+    inspection = models.ForeignKey(
+        Inspection,
+        on_delete=models.CASCADE,
+        related_name="tickets",
+    )
+
+    store = models.ForeignKey(
+        "stores.Store",
+        on_delete=models.CASCADE,
+    )
+
+    created_by = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.PROTECT,
+        related_name="created_tickets",
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.OPEN,
+    )
+
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    inspection_result = models.OneToOneField(
+        InspectionResult,
         on_delete=models.CASCADE,
         related_name="ticket",
     )
-    deadline = models.DateField()
-    issued_at = models.DateTimeField(auto_now_add=True)
 
     objects = TicketManager()
 
-    class Meta:
-        ordering = ["-issued_at"]
-
     def __str__(self):
-        return f"Ticket #{self.pk} — {self.inspection.store}"
-
-    def violations(self):
-        """The failed results on this ticket's inspection.
-
-        Each row is annotated with ``is_resolved``: true once at least one
-        evidence row against it has been accepted.
-        """
-        accepted = Evidence.objects.filter(
-            result=OuterRef("pk"),
-            review_status=Evidence.ReviewStatus.ACCEPTED,
-        )
-        return (
-            self.inspection.results.filter(outcome=InspectionResult.Outcome.FAIL)
-            .select_related("checklist_item")
-            .annotate(is_resolved=Exists(accepted))
-            .order_by("checklist_item__ordering", "checklist_item__code")
-        )
+        return f"Ticket #{self.pk} — {self.title}"
 
     @property
-    def status(self):
-        """Derived, never stored (design-notes §4).
-
-        CLOSED once every violation is resolved, OPEN otherwise.
-        """
-        if self.violations().filter(is_resolved=False).exists():
-            return self.Status.OPEN
-        return self.Status.CLOSED
+    def deadline(self):
+        return self.inspection_result.deadline
 
 
 class EvidenceManager(models.Manager):
@@ -80,12 +84,12 @@ class EvidenceManager(models.Manager):
         if user.role == "INSPECTOR":
             return self.all()
         if user.role == "OWNER":
-            return self.filter(result__inspection__store__owner=user)
+            return self.filter(ticket__store__owner=user)
         return self.none()
 
 
 class Evidence(models.Model):
-    """A store owner's proof of a fix, attached to one failed result.
+    """A store owner's proof of a fix, attached to one ticket (one violation).
 
     Append-only (design-notes assumption 4): a re-submission is a new
     row. Only the review fields are written after creation.
@@ -96,8 +100,8 @@ class Evidence(models.Model):
         ACCEPTED = "ACCEPTED", "Accepted"
         REJECTED = "REJECTED", "Rejected"
 
-    result = models.ForeignKey(
-        "inspections.InspectionResult",
+    ticket = models.ForeignKey(
+        Ticket,
         on_delete=models.CASCADE,
         related_name="evidence",
     )
@@ -137,4 +141,4 @@ class Evidence(models.Model):
         ]
 
     def __str__(self):
-        return f"Evidence for {self.result} ({self.get_review_status_display()})"
+        return f"Evidence for {self.ticket} ({self.get_review_status_display()})"

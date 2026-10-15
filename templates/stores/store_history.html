@@ -28,14 +28,14 @@
                 {% endif %}
             </td>
             <td>
-                {% if inspection.ticket %}
-                    {% with ticket_status=inspection.ticket.status %}
-                    <a href="{% url 'tickets:detail' inspection.ticket.pk %}">Ticket #{{ inspection.ticket.pk }}</a>
-                    <span class="iq-chip{% if ticket_status == 'OPEN' %} iq-chip--stamp{% endif %}">{{ ticket_status.label }}</span>
-                    {% endwith %}
-                {% else %}
+                {% for ticket in inspection.tickets.all %}
+                    <div>
+                        <a href="{% url 'tickets:detail' ticket.pk %}">Ticket #{{ ticket.pk }}</a>
+                        <span class="iq-chip{% if ticket.status == 'OPEN' %} iq-chip--stamp{% endif %}">{{ ticket.get_status_display }}</span>
+                    </div>
+                {% empty %}
                     <span class="iq-chip">No ticket</span>
-                {% endif %}
+                {% endfor %}
             </td>
         </tr>
     {% endfor %}
@@ -44,7 +44,7 @@
 {% else %}
 <div class="iq-empty">
     <p class="iq-empty__headline">No inspections have been recorded.</p>
-    <p class="iq-empty__sub">Completed inspections of this store will be listed here.</p>
+    <p class="iq-empty__sub">Inspections of this store are listed here once their checklist is recorded.</p>
 </div>
 {% endif %}
 

@@ -2,32 +2,24 @@ import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
-from apps.tickets.models import Evidence
+from apps.tickets.models import Evidence, Ticket
 
 from .helpers import make_image
 
 
-def _upload_url(result):
-    return reverse("tickets:evidence_create", args=[result.pk])
+def _upload_url(ticket):
+    return reverse("tickets:evidence_create", args=[ticket.pk])
 
 
-def _post_data(result, photo=None, note="Thermometer recalibrated."):
-    prefix = f"evidence-{result.pk}"
-    data = {f"{prefix}-note": note}
+def _post_data(photo=None, note="Thermometer recalibrated."):
+    data = {"note": note}
     if photo is not None:
-        data[f"{prefix}-photo"] = photo
+        data["photo"] = photo
     return data
 
 
-def _form_on_page(response, result):
-    violation = next(v for v in response.context["violations"] if v.pk == result.pk)
-    return violation.evidence_form
-
-
 @pytest.mark.django_db
-def test_ac12_01_evidence_uploaded_against_violation(
-    logged_in_owner, owner, ticket, violation
-):
+def test_ac12_01_evidence_uploaded_against_violation(logged_in_owner, owner, ticket):
     """
     AC 12.1 — Evidence uploaded against a violation
 
@@ -39,29 +31,26 @@ def test_ac12_01_evidence_uploaded_against_violation(
       status pending and the evidence is displayed under that violation
     """
     response = logged_in_owner.post(
-        _upload_url(violation),
-        data=_post_data(violation, photo=make_image("fix.png")),
-        follow=True,
+        _upload_url(ticket), data=_post_data(photo=make_image("fix.png")), follow=True
     )
 
     assert response.status_code == 200
     detail_url = reverse("tickets:detail", args=[ticket.pk])
-    assert response.redirect_chain[-1][0] == f"{detail_url}#violation-{violation.pk}"
+    assert response.redirect_chain[-1][0] == detail_url
 
     evidence = Evidence.objects.get()
-    assert evidence.result == violation
+    assert evidence.ticket == ticket
     assert evidence.submitted_by == owner
     assert evidence.review_status == Evidence.ReviewStatus.PENDING
     assert evidence.note == "Thermometer recalibrated."
 
-    shown = next(v for v in response.context["violations"] if v.pk == violation.pk)
-    assert shown.evidence_list == [evidence]
+    assert response.context["evidence_list"] == [evidence]
     assert evidence.photo.url.encode() in response.content
     assert b"Thermometer recalibrated." in response.content
 
 
 @pytest.mark.django_db
-def test_ac12_02_upload_without_file_rejected(logged_in_owner, violation):
+def test_ac12_02_upload_without_file_rejected(logged_in_owner, ticket):
     """
     AC 12.2 — Upload rejected when no file is attached
 
@@ -70,17 +59,17 @@ def test_ac12_02_upload_without_file_rejected(logged_in_owner, violation):
     Then the system does not store the evidence and displays an error
       message stating a photo is required
     """
-    response = logged_in_owner.post(_upload_url(violation), data=_post_data(violation))
+    response = logged_in_owner.post(_upload_url(ticket), data=_post_data())
 
     assert response.status_code == 200
     assert Evidence.objects.count() == 0
-    form = _form_on_page(response, violation)
+    form = response.context["evidence_form"]
     assert form.errors["photo"] == ["A photo is required."]
     assert b"A photo is required." in response.content
 
 
 @pytest.mark.django_db
-def test_ac12_03_non_image_file_rejected(logged_in_owner, violation):
+def test_ac12_03_non_image_file_rejected(logged_in_owner, ticket):
     """
     AC 12.3 — Upload rejected for a file that is not an image
 
@@ -94,12 +83,12 @@ def test_ac12_03_non_image_file_rejected(logged_in_owner, violation):
     )
 
     response = logged_in_owner.post(
-        _upload_url(violation), data=_post_data(violation, photo=not_an_image)
+        _upload_url(ticket), data=_post_data(photo=not_an_image)
     )
 
     assert response.status_code == 200
     assert Evidence.objects.count() == 0
-    form = _form_on_page(response, violation)
+    form = response.context["evidence_form"]
     assert form.errors["photo"] == ["The file must be an image."]
     assert b"The file must be an image." in response.content
 
@@ -116,11 +105,8 @@ def test_ac12_04_owner_cannot_upload_to_other_owners_violation(
     When the store owner submits evidence against that violation
     Then the system responds with not found and no evidence is stored
     """
-    their_violation = other_ticket.violations().first()
-
     response = logged_in_owner.post(
-        _upload_url(their_violation),
-        data=_post_data(their_violation, photo=make_image()),
+        _upload_url(other_ticket), data=_post_data(photo=make_image())
     )
 
     assert response.status_code == 404
@@ -128,10 +114,10 @@ def test_ac12_04_owner_cannot_upload_to_other_owners_violation(
 
 
 @pytest.mark.django_db
-def test_inspector_cannot_upload_evidence(logged_in_inspector, violation):
+def test_inspector_cannot_upload_evidence(logged_in_inspector, ticket):
     """Supporting test: evidence upload is owner-only."""
     response = logged_in_inspector.post(
-        _upload_url(violation), data=_post_data(violation, photo=make_image())
+        _upload_url(ticket), data=_post_data(photo=make_image())
     )
 
     assert response.status_code == 302
@@ -140,13 +126,12 @@ def test_inspector_cannot_upload_evidence(logged_in_inspector, violation):
 
 
 @pytest.mark.django_db
-def test_upload_against_passed_result_returns_404(logged_in_owner, ticket):
-    """Supporting test: only failed results on a ticket accept evidence."""
-    passed = ticket.inspection.results.get(outcome="PASS")
+def test_evidence_form_hidden_once_ticket_resolved(logged_in_owner, ticket):
+    """Supporting test: the upload form is only offered on an open ticket."""
+    ticket.status = Ticket.Status.RESOLVED
+    ticket.save()
 
-    response = logged_in_owner.post(
-        _upload_url(passed), data=_post_data(passed, photo=make_image())
-    )
+    response = logged_in_owner.get(reverse("tickets:detail", args=[ticket.pk]))
 
-    assert response.status_code == 404
-    assert Evidence.objects.count() == 0
+    assert response.context["evidence_form"] is None
+    assert _upload_url(ticket).encode() not in response.content

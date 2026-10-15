@@ -7,7 +7,7 @@ from apps.inspections.models import InspectionResult
 from apps.stores.models import Store
 from apps.tickets.models import Evidence
 
-from .helpers import issue_ticket, make_checklist_items, make_image, make_inspection
+from .helpers import make_checklist_items, make_image, make_inspection
 
 PASS = InspectionResult.Outcome.PASS
 FAIL = InspectionResult.Outcome.FAIL
@@ -52,29 +52,32 @@ def items(db):
 
 
 @pytest.fixture
-def ticket(owner, items):
-    """A ticket on the owner's store: items 1 and 3 failed, 2 passed, 4 N/A."""
+def inspection(owner, inspector, items):
+    """Inspection of the owner's store: items 1 and 3 failed, 2 passed, 4 N/A."""
     store = Store.objects.create(name="Corner Market", address="1 Main St", owner=owner)
-    return issue_ticket(make_inspection(store, items, [FAIL, PASS, FAIL, NA]))
+    return make_inspection(store, items, [FAIL, PASS, FAIL, NA], inspector=inspector)
 
 
 @pytest.fixture
-def other_ticket(other_owner, items):
+def ticket(inspection):
+    return inspection.tickets.order_by("pk").first()
+
+
+@pytest.fixture
+def other_ticket(other_owner, inspector, items):
     store = Store.objects.create(
         name="Riverside Cafe", address="42 River Rd", owner=other_owner
     )
-    return issue_ticket(make_inspection(store, items, [FAIL, PASS, PASS, PASS]))
+    inspection = make_inspection(
+        store, items, [FAIL, PASS, PASS, PASS], inspector=inspector
+    )
+    return inspection.tickets.get()
 
 
 @pytest.fixture
-def violation(ticket):
-    return ticket.violations().first()
-
-
-@pytest.fixture
-def pending_evidence(violation, owner):
+def pending_evidence(ticket, owner):
     return Evidence.objects.create(
-        result=violation,
+        ticket=ticket,
         submitted_by=owner,
         photo=make_image("fix.png"),
         note="Thermometer recalibrated.",

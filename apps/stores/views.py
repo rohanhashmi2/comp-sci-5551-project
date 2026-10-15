@@ -1,11 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView
 
 from apps.common.mixins import InspectorRequiredMixin
 from apps.inspections.models import Inspection, InspectionResult
+from apps.tickets.models import Ticket
 
 from .forms import StoreForm
 from .models import Store
@@ -33,10 +34,12 @@ class StoreCreateView(LoginRequiredMixin, InspectorRequiredMixin, CreateView):
 
 
 class StoreHistoryView(LoginRequiredMixin, DetailView):
-    """Completed inspections of one store, oldest first.
+    """Recorded inspections of one store, oldest first, with their tickets.
 
-    Open to both roles. The store is looked up through ``visible_to``, so
-    an owner requesting another owner's store gets a 404.
+    An inspection is part of the history once its checklist is recorded,
+    i.e. any status after SCHEDULED. Open to both roles. The store is
+    looked up through ``visible_to``, so an owner requesting another
+    owner's store gets a 404.
     """
 
     template_name = "stores/store_history.html"
@@ -48,13 +51,10 @@ class StoreHistoryView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["inspections"] = (
-            self.object.inspections.filter(
-                status__in=[
-                    Inspection.Status.COMPLETED,
-                    Inspection.Status.RE_INSPECTION_SCHEDULED,
-                ]
+            self.object.inspections.exclude(status=Inspection.Status.SCHEDULED)
+            .prefetch_related(
+                Prefetch("tickets", queryset=Ticket.objects.order_by("pk"))
             )
-            .select_related("ticket")
             .annotate(
                 violation_count=Count(
                     "results",

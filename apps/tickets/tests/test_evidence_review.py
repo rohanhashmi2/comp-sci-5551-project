@@ -1,7 +1,7 @@
 import pytest
 from django.urls import reverse
 
-from apps.tickets.models import Evidence
+from apps.tickets.models import Evidence, Ticket
 
 
 def _review_url(evidence):
@@ -13,12 +13,10 @@ def _post_data(evidence, decision, comment=""):
     return {f"{prefix}-review_status": decision, f"{prefix}-reviewer_comment": comment}
 
 
-def _violation_on_page(response, evidence):
-    return next(v for v in response.context["violations"] if v.pk == evidence.result_id)
-
-
 @pytest.mark.django_db
-def test_ac13_01_inspector_accepts_evidence(logged_in_inspector, pending_evidence):
+def test_ac13_01_inspector_accepts_evidence(
+    logged_in_inspector, ticket, pending_evidence
+):
     """
     AC 13.1 — Inspector accepts evidence
 
@@ -39,14 +37,14 @@ def test_ac13_01_inspector_accepts_evidence(logged_in_inspector, pending_evidenc
     assert pending_evidence.review_status == Evidence.ReviewStatus.ACCEPTED
     assert pending_evidence.reviewed_at is not None
 
-    violation = _violation_on_page(response, pending_evidence)
-    assert violation.is_resolved is True
+    ticket.refresh_from_db()
+    assert ticket.status == Ticket.Status.RESOLVED
     assert "✓ Resolved".encode() in response.content
 
 
 @pytest.mark.django_db
 def test_ac13_02_inspector_rejects_evidence_with_comment(
-    logged_in_inspector, pending_evidence
+    logged_in_inspector, ticket, pending_evidence
 ):
     """
     AC 13.2 — Inspector rejects evidence with a comment
@@ -71,14 +69,15 @@ def test_ac13_02_inspector_rejects_evidence_with_comment(
     assert pending_evidence.reviewer_comment == comment
     assert pending_evidence.reviewed_at is not None
 
-    violation = _violation_on_page(response, pending_evidence)
-    assert violation.is_resolved is False
+    ticket.refresh_from_db()
+    assert ticket.status == Ticket.Status.OPEN
+    assert "✕ Unresolved".encode() in response.content
     assert comment.encode() in response.content
 
 
 @pytest.mark.django_db
 def test_ac13_03_rejection_without_comment_rejected(
-    logged_in_inspector, pending_evidence
+    logged_in_inspector, ticket, pending_evidence
 ):
     """
     AC 13.3 — Rejection rejected when no comment is given
@@ -98,15 +97,18 @@ def test_ac13_03_rejection_without_comment_rejected(
     pending_evidence.refresh_from_db()
     assert pending_evidence.review_status == Evidence.ReviewStatus.PENDING
     assert pending_evidence.reviewed_at is None
+    ticket.refresh_from_db()
+    assert ticket.status == Ticket.Status.OPEN
 
-    violation = _violation_on_page(response, pending_evidence)
-    form = violation.evidence_list[0].review_form
+    form = response.context["evidence_list"][0].review_form
     assert form.has_error("reviewer_comment", code="comment_required")
     assert b"A comment is required when rejecting evidence." in response.content
 
 
 @pytest.mark.django_db
-def test_ac13_04_owner_cannot_review_evidence(logged_in_owner, pending_evidence):
+def test_ac13_04_owner_cannot_review_evidence(
+    logged_in_owner, ticket, pending_evidence
+):
     """
     AC 13.4 — A store owner cannot review evidence
 
@@ -125,6 +127,8 @@ def test_ac13_04_owner_cannot_review_evidence(logged_in_owner, pending_evidence)
     pending_evidence.refresh_from_db()
     assert pending_evidence.review_status == Evidence.ReviewStatus.PENDING
     assert pending_evidence.reviewed_at is None
+    ticket.refresh_from_db()
+    assert ticket.status == Ticket.Status.OPEN
 
 
 @pytest.mark.django_db
@@ -136,13 +140,25 @@ def test_review_form_shown_to_inspector_only(
 
     client.force_login(inspector)
     inspector_page = client.get(url)
-    assert (
-        _violation_on_page(inspector_page, pending_evidence)
-        .evidence_list[0]
-        .review_form
-    )
+    assert inspector_page.context["evidence_list"][0].review_form
     assert _review_url(pending_evidence).encode() in inspector_page.content
 
     client.force_login(owner)
     owner_page = client.get(url)
     assert _review_url(pending_evidence).encode() not in owner_page.content
+
+
+@pytest.mark.django_db
+def test_accepted_ticket_leaves_owner_open_list(
+    client, inspector, owner, ticket, pending_evidence
+):
+    """Supporting test: once resolved, a ticket drops off Story 10's open list."""
+    client.force_login(inspector)
+    client.post(
+        _review_url(pending_evidence), data=_post_data(pending_evidence, "ACCEPTED")
+    )
+
+    client.force_login(owner)
+    response = client.get(reverse("tickets:owner_ticket_list"))
+
+    assert ticket not in list(response.context["tickets"])

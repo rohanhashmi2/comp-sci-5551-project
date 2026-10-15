@@ -4,113 +4,104 @@
 {% block title %}Ticket #{{ ticket.pk }} — InspectIQ{% endblock %}
 
 {% block content %}
-{% with inspection=ticket.inspection store=ticket.inspection.store %}
+{% with store=ticket.store item=result.checklist_item %}
 <dl class="iq-letterhead">
     <dt>From</dt>
     <dd>InspectIQ Food Safety</dd>
     <dt>To</dt>
     <dd>{{ store.owner.email }}</dd>
     <dt>Date</dt>
-    <dd>{{ ticket.issued_at|date:"l, j F Y" }}</dd>
+    <dd>{{ ticket.created_at|date:"l, j F Y" }}</dd>
     <dt>Subject</dt>
-    <dd>Ticket #{{ ticket.pk }} · Corrections required</dd>
+    <dd>Ticket #{{ ticket.pk }} · {{ ticket.title }}</dd>
 </dl>
 
 <header class="iq-page-head">
     <h1>{{ store.name }}</h1>
-    {% if status == "OPEN" %}
-        <span class="iq-chip iq-chip--stamp">Open</span>
-    {% else %}
-        <span class="iq-chip">Closed</span>
-    {% endif %}
+    <span class="iq-chip{% if ticket.status == 'OPEN' %} iq-chip--stamp{% endif %}">{{ ticket.get_status_display }}</span>
 </header>
 <p class="text-muted">
-    Inspected {{ inspection.scheduled_for|date:"l, j F Y" }} · {{ store.address }}
+    Inspected {{ ticket.inspection.scheduled_for|date:"l, j F Y" }} · {{ store.address }}
 </p>
 
 <div class="iq-deadline">
     <span class="iq-deadline__label">Deadline</span>
-    <p class="iq-deadline__date">{{ ticket.deadline|date:"l, j F Y" }}</p>
-    {% if status == "OPEN" %}
-        <span class="iq-deadline__sub">{{ ticket.deadline|days_remaining }}</span>
+    <p class="iq-deadline__date">{{ result.deadline|date:"l, j F Y · H:i" }}</p>
+    {% if ticket.status == "OPEN" %}
+        <span class="iq-deadline__sub">{{ result.deadline|days_remaining }}</span>
     {% endif %}
 </div>
 
-<p class="iq-section-title">Violations · {{ violations|length }}</p>
+<p class="iq-section-title">Violation</p>
 
-<ol class="iq-violations">
-    {% for violation in violations %}
-    <li id="violation-{{ violation.pk }}" class="iq-violation">
-        <div class="iq-violation__head">
-            <div>
-                <span class="iq-row-code">{{ violation.checklist_item.code }}</span>
-                <h2 class="iq-row-title">{{ violation.checklist_item.title }}</h2>
-            </div>
-            {% if violation.is_resolved %}
-                <span class="iq-chip">✓ Resolved</span>
-            {% else %}
-                <span class="iq-chip iq-chip--stamp">✕ Unresolved</span>
-            {% endif %}
+<div id="violation" class="iq-violation">
+    <div class="iq-violation__head">
+        <div>
+            <span class="iq-row-code">{{ item.code }}</span>
+            <h2 class="iq-row-title">{{ item.title }}</h2>
         </div>
-
-        <p class="iq-violation__comment">{{ violation.comment|linebreaksbr }}</p>
-        {% if violation.photo %}
-            <img class="iq-photo" src="{{ violation.photo.url }}"
-                 alt="Inspector's photo of {{ violation.checklist_item.code }}">
+        {% if ticket.status == "RESOLVED" %}
+            <span class="iq-chip">✓ Resolved</span>
+        {% elif ticket.status == "OPEN" %}
+            <span class="iq-chip iq-chip--stamp">✕ Unresolved</span>
         {% endif %}
+    </div>
 
-        {% if violation.evidence_list %}
-        <p class="iq-violation__label">Evidence</p>
-        <ul class="iq-evidence">
-            {% for evidence in violation.evidence_list %}
-            <li>
-                <img class="iq-photo iq-photo--thumb" src="{{ evidence.photo.url }}"
-                     alt="Evidence submitted {{ evidence.submitted_at|date:'Y-m-d H:i' }}">
-                <div class="iq-evidence__body">
-                    <span class="iq-evidence__when">Submitted {{ evidence.submitted_at|date:"Y-m-d H:i" }}</span>
-                    {% if evidence.review_status == "ACCEPTED" %}
-                        <span class="iq-chip">✓ Accepted</span>
-                    {% elif evidence.review_status == "REJECTED" %}
-                        <span class="iq-chip iq-chip--stamp">✕ Rejected</span>
-                    {% else %}
-                        <span class="iq-chip">— Pending</span>
-                    {% endif %}
-                    {% if evidence.note %}
-                        <p class="iq-evidence__note">{{ evidence.note|linebreaksbr }}</p>
-                    {% endif %}
-                    {% if evidence.reviewer_comment %}
-                        <p class="iq-evidence__note">
-                            <span class="iq-mono">Inspector</span> {{ evidence.reviewer_comment|linebreaksbr }}
-                        </p>
-                    {% endif %}
+    <p class="iq-violation__comment">{{ result.comment|linebreaksbr }}</p>
+    {% if result.photo %}
+        <img class="iq-photo" src="{{ result.photo.url }}" alt="Inspector's photo of {{ item.code }}">
+    {% endif %}
 
-                    {% if evidence.review_form %}
-                    <form method="post" action="{% url 'tickets:evidence_review' evidence.pk %}"
-                          class="iq-evidence__form" novalidate>
-                        {% csrf_token %}
-                        {% bootstrap_form evidence.review_form %}
-                        {% bootstrap_button "Record review" button_type="submit" button_class="btn-primary btn-sm" %}
-                    </form>
-                    {% endif %}
-                </div>
-            </li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+    {% if evidence_list %}
+    <p id="evidence" class="iq-violation__label">Evidence</p>
+    <ul class="iq-evidence">
+        {% for evidence in evidence_list %}
+        <li>
+            <img class="iq-photo iq-photo--thumb" src="{{ evidence.photo.url }}"
+                 alt="Evidence submitted {{ evidence.submitted_at|date:'Y-m-d H:i' }}">
+            <div class="iq-evidence__body">
+                <span class="iq-evidence__when">Submitted {{ evidence.submitted_at|date:"Y-m-d H:i" }}</span>
+                {% if evidence.review_status == "ACCEPTED" %}
+                    <span class="iq-chip">✓ Accepted</span>
+                {% elif evidence.review_status == "REJECTED" %}
+                    <span class="iq-chip iq-chip--stamp">✕ Rejected</span>
+                {% else %}
+                    <span class="iq-chip">— Pending</span>
+                {% endif %}
+                {% if evidence.note %}
+                    <p class="iq-evidence__note">{{ evidence.note|linebreaksbr }}</p>
+                {% endif %}
+                {% if evidence.reviewer_comment %}
+                    <p class="iq-evidence__note">
+                        <span class="iq-mono">Inspector</span> {{ evidence.reviewer_comment|linebreaksbr }}
+                    </p>
+                {% endif %}
 
-        {% if violation.evidence_form %}
-        <form method="post" enctype="multipart/form-data"
-              action="{% url 'tickets:evidence_create' violation.pk %}"
-              class="iq-evidence__form" novalidate>
-            {% csrf_token %}
-            <p class="iq-violation__label">Submit evidence of the fix</p>
-            {% bootstrap_form violation.evidence_form %}
-            {% bootstrap_button "Submit evidence" button_type="submit" button_class="btn-primary btn-sm" %}
-        </form>
-        {% endif %}
-    </li>
-    {% endfor %}
-</ol>
+                {% if evidence.review_form %}
+                <form method="post" action="{% url 'tickets:evidence_review' evidence.pk %}"
+                      class="iq-evidence__form" novalidate>
+                    {% csrf_token %}
+                    {% bootstrap_form evidence.review_form %}
+                    {% bootstrap_button "Record review" button_type="submit" button_class="btn-primary btn-sm" %}
+                </form>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if evidence_form %}
+    <form method="post" enctype="multipart/form-data"
+          action="{% url 'tickets:evidence_create' ticket.pk %}"
+          class="iq-evidence__form" novalidate>
+        {% csrf_token %}
+        <p class="iq-violation__label">Submit evidence of the fix</p>
+        {% bootstrap_form evidence_form %}
+        {% bootstrap_button "Submit evidence" button_type="submit" button_class="btn-primary btn-sm" %}
+    </form>
+    {% endif %}
+</div>
 
 <p class="iq-foot-actions">
     <a href="{% url 'stores:history' store.pk %}">Inspection history</a>

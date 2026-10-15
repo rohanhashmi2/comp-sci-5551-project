@@ -17,6 +17,7 @@ from .forms import (
     InspectionScheduleForm,
 )
 from .models import ChecklistItem, Inspection, InspectionResult
+from apps.tickets.models import Ticket
 
 
 class InspectionCreateView(LoginRequiredMixin, InspectorRequiredMixin, CreateView):
@@ -43,7 +44,7 @@ class InspectionConductView(LoginRequiredMixin, InspectorRequiredMixin, View):
     def _active_items(self):
         return list(ChecklistItem.objects.filter(is_active=True))
 
-    def _build_formset(self, data=None):
+    def _build_formset(self, data=None, files=None):
         active = self._active_items()
         FormSetCls = modelformset_factory(  # noqa: N806  (Django idiom)
             InspectionResult,
@@ -61,6 +62,7 @@ class InspectionConductView(LoginRequiredMixin, InspectorRequiredMixin, View):
         )
         formset = FormSetCls(
             data=data,
+            files=files,
             queryset=InspectionResult.objects.none(),
             # Every row is required. Without this, Django treats extras
             # with no changed data as "empty, no problem" and skips the
@@ -98,7 +100,10 @@ class InspectionConductView(LoginRequiredMixin, InspectorRequiredMixin, View):
             )
             return redirect("accounts:inspector_dashboard")
 
-        formset, active = self._build_formset(data=request.POST)
+        formset, active = self._build_formset(
+            data=request.POST,
+            files=request.FILES,
+        )
         if not formset.is_valid():
             return render(
                 request,
@@ -112,12 +117,25 @@ class InspectionConductView(LoginRequiredMixin, InspectorRequiredMixin, View):
 
         with transaction.atomic():
             for form, item in zip(formset.forms, active):
-                InspectionResult.objects.create(
+                result = InspectionResult.objects.create(
                     inspection=inspection,
                     checklist_item=item,
                     outcome=form.cleaned_data["outcome"],
-                    comment=form.cleaned_data["comment"]
+                    comment=form.cleaned_data["comment"],
+                    photo=form.cleaned_data["photo"],
+                    deadline=form.cleaned_data["deadline"]
                 )
+
+                if result.outcome == InspectionResult.Outcome.FAIL:
+                    Ticket.objects.create(
+                    inspection=inspection,
+                    inspection_result=result,
+                    store=inspection.store,
+                    created_by=request.user,
+                    title=f"Failed Inspection Item: {item.code}",
+                    description=result.comment,
+                )
+                
             transitions.apply(inspection, "begin")
             inspection.started_at = timezone.now()
             inspection.save(update_fields=["status", "started_at"])

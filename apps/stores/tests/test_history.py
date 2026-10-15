@@ -4,13 +4,8 @@ from django.urls import reverse
 from apps.accounts.models import User
 from apps.inspections.models import Inspection, InspectionResult
 from apps.stores.models import Store
-from apps.tickets.models import Evidence
-from apps.tickets.tests.helpers import (
-    issue_ticket,
-    make_checklist_items,
-    make_image,
-    make_inspection,
-)
+from apps.tickets.models import Ticket
+from apps.tickets.tests.helpers import make_checklist_items, make_inspection
 
 PASS = InspectionResult.Outcome.PASS
 FAIL = InspectionResult.Outcome.FAIL
@@ -81,9 +76,12 @@ def test_ac14_01_inspector_views_history_of_any_store(client, inspector, store, 
       ticket status
     """
     # Created newest-first so the assertion proves the view sorts by date.
-    recent = make_inspection(store, items, [PASS, PASS, PASS, PASS], days_ago=3)
-    older = make_inspection(store, items, [FAIL, PASS, FAIL, PASS], days_ago=40)
-    ticket = issue_ticket(older)
+    recent = make_inspection(
+        store, items, [PASS, PASS, PASS, PASS], inspector=inspector, days_ago=3
+    )
+    older = make_inspection(
+        store, items, [FAIL, PASS, FAIL, PASS], inspector=inspector, days_ago=40
+    )
     client.force_login(inspector)
 
     response = client.get(_history_url(store))
@@ -95,13 +93,16 @@ def test_ac14_01_inspector_views_history_of_any_store(client, inspector, store, 
     content = response.content.decode()
     assert "✕ 2 violations" in content
     assert "✓ Passed" in content
-    assert reverse("tickets:detail", args=[ticket.pk]) in content
-    assert ">Open</span>" in content
+    for ticket in older.tickets.all():
+        assert reverse("tickets:detail", args=[ticket.pk]) in content
+    assert content.count(">Open</span>") == 2
     assert "No ticket" in content
 
 
 @pytest.mark.django_db
-def test_ac14_02_owner_views_history_of_own_store(client, owner, store, items):
+def test_ac14_02_owner_views_history_of_own_store(
+    client, inspector, owner, store, items
+):
     """
     AC 14.2 — Owner views the history of their own store
 
@@ -110,8 +111,9 @@ def test_ac14_02_owner_views_history_of_own_store(client, owner, store, items):
     When the store owner opens their store's history
     Then that inspection is listed with its outcome and ticket status
     """
-    inspection = make_inspection(store, items, [FAIL, PASS, PASS, PASS])
-    issue_ticket(inspection)
+    inspection = make_inspection(
+        store, items, [FAIL, PASS, PASS, PASS], inspector=inspector
+    )
     client.force_login(owner)
 
     response = client.get(_history_url(store))
@@ -125,7 +127,7 @@ def test_ac14_02_owner_views_history_of_own_store(client, owner, store, items):
 
 @pytest.mark.django_db
 def test_ac14_03_owner_cannot_view_other_stores_history(
-    client, owner, other_store, items
+    client, inspector, owner, other_store, items
 ):
     """
     AC 14.3 — Owner cannot view another store's history
@@ -136,7 +138,7 @@ def test_ac14_03_owner_cannot_view_other_stores_history(
     Then the system responds with not found and no inspection records are
       displayed
     """
-    make_inspection(other_store, items, [FAIL, PASS, PASS, PASS])
+    make_inspection(other_store, items, [FAIL, PASS, PASS, PASS], inspector=inspector)
     client.force_login(owner)
 
     response = client.get(_history_url(other_store))
@@ -157,7 +159,7 @@ def test_ac14_04_empty_history(client, inspector, store):
     Then the system displays a message stating no inspections have been
       recorded
     """
-    # A scheduled visit is not part of the history.
+    # A scheduled visit has no recorded checklist, so it is not history.
     Inspection.objects.create(store=store, scheduled_for="2030-01-01T09:00Z")
     client.force_login(inspector)
 
@@ -169,20 +171,19 @@ def test_ac14_04_empty_history(client, inspector, store):
 
 
 @pytest.mark.django_db
-def test_closed_ticket_shown_as_closed_in_history(client, owner, store, items):
-    """Supporting test: the history's ticket status follows evidence review."""
-    ticket = issue_ticket(make_inspection(store, items, [FAIL, PASS, PASS, PASS]))
-    Evidence.objects.create(
-        result=ticket.violations().get(),
-        submitted_by=owner,
-        photo=make_image(),
-        review_status=Evidence.ReviewStatus.ACCEPTED,
+def test_resolved_ticket_shown_as_resolved_in_history(
+    client, inspector, owner, store, items
+):
+    """Supporting test: the history's ticket status follows the ticket."""
+    inspection = make_inspection(
+        store, items, [FAIL, PASS, PASS, PASS], inspector=inspector
     )
+    inspection.tickets.update(status=Ticket.Status.RESOLVED)
     client.force_login(owner)
 
     response = client.get(_history_url(store))
 
-    assert ">Closed</span>" in response.content.decode()
+    assert ">Resolved</span>" in response.content.decode()
 
 
 @pytest.mark.django_db

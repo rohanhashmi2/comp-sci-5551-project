@@ -1,7 +1,8 @@
 """Builders shared by the ticket and store-history tests.
 
-Story 9 (submit inspection and issue ticket) is not built yet, so these
-create completed inspections and tickets directly through the ORM.
+``make_inspection`` produces what Story 9's conduct view leaves behind:
+an IN_PROGRESS inspection with one result per item, and one ticket per
+failed result carrying the result's comment, photo and deadline.
 """
 
 import io
@@ -40,30 +41,33 @@ def make_checklist_items():
     ]
 
 
-def make_inspection(store, items, outcomes, *, days_ago=1):
-    """A completed inspection with one result per (item, outcome) pair.
-
-    Failed results carry a comment and a photo, as Stories 7 and 8 require.
-    """
+def make_inspection(store, items, outcomes, *, inspector, days_ago=1):
     inspection = Inspection.objects.create(
         store=store,
         scheduled_for=timezone.now() - timedelta(days=days_ago),
-        status=Inspection.Status.COMPLETED,
+        status=Inspection.Status.IN_PROGRESS,
+        started_at=timezone.now() - timedelta(days=days_ago),
     )
     for item, outcome in zip(items, outcomes):
-        failed = outcome == InspectionResult.Outcome.FAIL
-        InspectionResult.objects.create(
+        if outcome != InspectionResult.Outcome.FAIL:
+            InspectionResult.objects.create(
+                inspection=inspection, checklist_item=item, outcome=outcome
+            )
+            continue
+        result = InspectionResult.objects.create(
             inspection=inspection,
             checklist_item=item,
             outcome=outcome,
-            comment=f"{item.title} not met." if failed else "",
-            photo=make_image(f"{item.code}.png") if failed else None,
+            comment=f"{item.title} not met.",
+            photo=make_image(f"{item.code}.png"),
+            deadline=timezone.now() + timedelta(days=14),
+        )
+        Ticket.objects.create(
+            inspection=inspection,
+            inspection_result=result,
+            store=store,
+            created_by=inspector,
+            title=f"Failed Inspection Item: {item.code}",
+            description=result.comment,
         )
     return inspection
-
-
-def issue_ticket(inspection, *, days_until_deadline=14):
-    return Ticket.objects.create(
-        inspection=inspection,
-        deadline=timezone.localdate() + timedelta(days=days_until_deadline),
-    )

@@ -7,9 +7,9 @@ from apps.tickets.models import Evidence, Ticket
 from .helpers import make_image
 
 
-def _evidence(result, owner, status=Evidence.ReviewStatus.PENDING, comment=""):
+def _evidence(ticket, owner, status=Evidence.ReviewStatus.PENDING, comment=""):
     return Evidence.objects.create(
-        result=result,
+        ticket=ticket,
         submitted_by=owner,
         photo=make_image(),
         review_status=status,
@@ -18,35 +18,31 @@ def _evidence(result, owner, status=Evidence.ReviewStatus.PENDING, comment=""):
 
 
 @pytest.mark.django_db
-def test_ticket_status_closes_when_every_violation_accepted(ticket, owner):
-    """Ticket.status is OPEN until every violation has accepted evidence."""
-    first, second = ticket.violations()
-    assert ticket.status == Ticket.Status.OPEN
-
-    _evidence(first, owner, Evidence.ReviewStatus.ACCEPTED)
-    assert ticket.status == Ticket.Status.OPEN
-
-    _evidence(second, owner, Evidence.ReviewStatus.REJECTED, "Still dirty.")
-    _evidence(second, owner)
-    assert ticket.status == Ticket.Status.OPEN
-
-    _evidence(second, owner, Evidence.ReviewStatus.ACCEPTED)
-    assert ticket.status == Ticket.Status.CLOSED
+def test_one_ticket_per_failed_result(inspection):
+    """Every ticket points at a FAIL result on its inspection, one each."""
+    tickets = list(inspection.tickets.order_by("pk"))
+    assert [t.inspection_result.checklist_item.code for t in tickets] == [
+        "TS-01",
+        "TS-03",
+    ]
+    assert all(t.inspection_result.outcome == "FAIL" for t in tickets)
+    assert all(t.status == Ticket.Status.OPEN for t in tickets)
 
 
 @pytest.mark.django_db
-def test_ticket_violations_lists_only_failed_results(ticket):
-    violations = list(ticket.violations())
-    assert [v.checklist_item.code for v in violations] == ["TS-01", "TS-03"]
-    assert all(v.is_resolved is False for v in violations)
+def test_ticket_deadline_comes_from_result(ticket):
+    assert ticket.deadline == ticket.inspection_result.deadline
+    assert str(ticket) == f"Ticket #{ticket.pk} — Failed Inspection Item: TS-01"
 
 
 @pytest.mark.django_db
 def test_ticket_visible_to_filters_by_role(
     inspector, owner, other_owner, ticket, other_ticket
 ):
-    assert set(Ticket.objects.visible_to(inspector)) == {ticket, other_ticket}
-    assert list(Ticket.objects.visible_to(owner)) == [ticket]
+    owner_tickets = set(ticket.inspection.tickets.all())
+
+    assert set(Ticket.objects.visible_to(inspector)) == owner_tickets | {other_ticket}
+    assert set(Ticket.objects.visible_to(owner)) == owner_tickets
     assert list(Ticket.objects.visible_to(other_owner)) == [other_ticket]
     assert list(Ticket.objects.visible_to(AnonymousUser())) == []
 
@@ -55,8 +51,8 @@ def test_ticket_visible_to_filters_by_role(
 def test_evidence_visible_to_filters_by_role(
     inspector, owner, other_owner, ticket, other_ticket
 ):
-    mine = _evidence(ticket.violations().first(), owner)
-    theirs = _evidence(other_ticket.violations().first(), other_owner)
+    mine = _evidence(ticket, owner)
+    theirs = _evidence(other_ticket, other_owner)
 
     assert set(Evidence.objects.visible_to(inspector)) == {mine, theirs}
     assert list(Evidence.objects.visible_to(owner)) == [mine]
@@ -65,7 +61,7 @@ def test_evidence_visible_to_filters_by_role(
 
 
 @pytest.mark.django_db
-def test_evidence_rejection_requires_comment_at_db_level(violation, owner):
+def test_evidence_rejection_requires_comment_at_db_level(ticket, owner):
     """The DB rejects a REJECTED evidence row with an empty comment."""
     with pytest.raises(IntegrityError):
-        _evidence(violation, owner, Evidence.ReviewStatus.REJECTED, "")
+        _evidence(ticket, owner, Evidence.ReviewStatus.REJECTED, "")
