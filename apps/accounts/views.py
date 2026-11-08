@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView as BaseLoginView
+from django.db.models import Count, Q
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, RedirectView, TemplateView
@@ -72,11 +73,14 @@ class OwnerDashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["stores"] = Store.objects.visible_to(self.request.user)
-
-        ctx["tickets"] = Ticket.objects.filter(
-            store__owner = self.request.user,
-            status = Ticket.Status.OPEN,
+        # Per-store open-ticket count via annotation so the template
+        # avoids a query per row. "Open" means status=OPEN specifically,
+        # matching OwnerTicketListView's filter so the dashboard count
+        # equals the row count on the ticket list page.
+        ctx["stores"] = Store.objects.visible_to(self.request.user).annotate(
+            open_ticket_count=Count(
+                "ticket",
+                filter=Q(ticket__status=Ticket.Status.OPEN),
+            )
         )
-
         return ctx
