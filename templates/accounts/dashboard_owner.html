@@ -28,9 +28,9 @@
             <br>
             <small><a href="{% url 'stores:history' store.pk %}">Inspection history</a></small>
         </div>
-        {% if tickets %}
+        {% if store.open_ticket_count %}
         <a href="{% url 'tickets:owner_ticket_list' %}" class="btn btn-primary">
-            View Open Tickets ({{ tickets.count }})
+            View Open Tickets ({{ store.open_ticket_count }})
         </a>
         {% else %}
         <p>No open tickets.</p>
