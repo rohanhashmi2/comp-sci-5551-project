@@ -1,8 +1,11 @@
+import io
 from datetime import timedelta
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image
 
 from apps.accounts.models import User
 from apps.inspections.models import ChecklistItem, Inspection, InspectionResult
@@ -15,12 +18,25 @@ def _conduct_url(inspection):
     return reverse("inspections:conduct", args=[inspection.pk])
 
 
+def _make_image(name="photo.png"):
+    """Minimal in-memory PNG sufficient to pass ImageField validation."""
+    buffer = io.BytesIO()
+    Image.new("RGB", (8, 8), "white").save(buffer, format="PNG")
+    return SimpleUploadedFile(name, buffer.getvalue(), content_type="image/png")
+
+
 def _formset_post_data(outcomes):
     """Build the POST payload for the InspectionResult formset.
 
     ``outcomes`` is a list of outcome strings in checklist-item order.
     An empty string ``""`` simulates an unmarked radio.
+
+    FAIL rows auto-carry the comment, photo and future deadline that
+    ``InspectionResultForm.clean`` requires since Stories 7–9. PASS and
+    NOT_APPLICABLE rows carry only an outcome.
     """
+    deadline = timezone.localtime(timezone.now() + timedelta(days=14))
+    deadline_str = deadline.strftime("%Y-%m-%dT%H:%M")
     data = {
         "form-TOTAL_FORMS": str(len(outcomes)),
         "form-INITIAL_FORMS": "0",
@@ -30,7 +46,17 @@ def _formset_post_data(outcomes):
     for i, outcome in enumerate(outcomes):
         data[f"form-{i}-id"] = ""
         data[f"form-{i}-outcome"] = outcome
+        if outcome == "FAIL":
+            data[f"form-{i}-comment"] = f"Item {i + 1} not met."
+            data[f"form-{i}-photo"] = _make_image(f"item-{i + 1}.png")
+            data[f"form-{i}-deadline"] = deadline_str
     return data
+
+
+@pytest.fixture(autouse=True)
+def media_root(settings, tmp_path):
+    """Sandbox FAIL-row photo uploads to a per-test tmp dir."""
+    settings.MEDIA_ROOT = tmp_path
 
 
 @pytest.fixture
@@ -203,6 +229,31 @@ def test_ac06_04_pass_clean_distinguishable_from_unfilled(
     # inspection has one result per *active* checklist item.
     active_count = ChecklistItem.objects.filter(is_active=True).count()
     assert scheduled_inspection.results.count() == active_count
+
+
+@pytest.mark.django_db
+def test_conduct_leaves_inspection_in_progress_not_completed(
+    logged_in_inspector, scheduled_inspection, checklist_items
+):
+    """Supporting test for AC 6.2's contract.
+
+    The conduct view must end the inspection at IN_PROGRESS. Submitting
+    (US-25) is a separate step with its own view. This guards against a
+    future refactor that chains both transitions into the conduct POST,
+    which would silently invalidate AC 6.2.
+    """
+    outcomes = ["PASS"] * len(checklist_items)
+
+    logged_in_inspector.post(
+        _conduct_url(scheduled_inspection),
+        data=_formset_post_data(outcomes),
+    )
+
+    scheduled_inspection.refresh_from_db()
+    assert scheduled_inspection.status == Inspection.Status.IN_PROGRESS
+    assert scheduled_inspection.status != Inspection.Status.COMPLETED
+    assert scheduled_inspection.completed_at is None
+    assert scheduled_inspection.notes == ""
 
 
 @pytest.mark.django_db

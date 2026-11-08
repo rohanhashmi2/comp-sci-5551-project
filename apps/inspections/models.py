@@ -35,11 +35,13 @@ class Inspection(models.Model):
     )
     scheduled_for = models.DateTimeField()
     started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(
         max_length=32,
         choices=Status.choices,
         default=Status.SCHEDULED,
     )
+    notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = InspectionManager()
