@@ -51,15 +51,10 @@ class InspectionResultForm(forms.ModelForm):
         required=False,
     )
 
-    photo = forms.ImageField(
-        required=False
-    )
+    photo = forms.ImageField(required=False)
 
     deadline = forms.DateTimeField(
-        widget=forms.DateTimeInput(
-            attrs={"type": "datetime-local"}
-        ),
-        required = False
+        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}), required=False
     )
 
     class Meta:
@@ -77,38 +72,52 @@ class InspectionResultForm(forms.ModelForm):
         if outcome == InspectionResult.Outcome.FAIL:
 
             if not comment:
-                self.add_error(
-                    "comment",
-                    "A comment is required when an item fails."
-                )
+                self.add_error("comment", "A comment is required when an item fails.")
 
             if photo:
                 if photo.size > (5 * 1024 * 1024):
-                    self.add_error(
-                        "photo",
-                        "A photo cannot be larger than 5MB."
-                    )
+                    self.add_error("photo", "A photo cannot be larger than 5MB.")
 
             if not photo:
-                self.add_error(
-                    "photo",
-                    "A photo is required when an item fails."
-                )
+                self.add_error("photo", "A photo is required when an item fails.")
 
             if deadline:
                 if deadline <= timezone.now():
                     self.add_error(
-                        "deadline",
-                        "Deadline must be scheduled in the future."
+                        "deadline", "Deadline must be scheduled in the future."
                     )
 
             if not deadline:
-                self.add_error(
-                    "deadline",
-                    "A deadline is required when an item fails."
-                )
-          
+                self.add_error("deadline", "A deadline is required when an item fails.")
+
         return cleaned_data
+
+
+class InspectionSubmitForm(forms.Form):
+    """Closing notes required to submit a conducted inspection.
+
+    Kept as a plain Form (not a ModelForm) because the "notes required"
+    rule is specific to the submit step — the ``Inspection.notes`` model
+    field itself remains ``blank=True`` so the field can stay empty while
+    the inspection is still IN_PROGRESS.
+    """
+
+    notes = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": 6}),
+        required=True,
+        error_messages={
+            "required": "Closing notes are required to submit the inspection.",
+        },
+    )
+
+    def clean_notes(self):
+        value = (self.cleaned_data.get("notes") or "").strip()
+        if not value:
+            raise forms.ValidationError(
+                "Closing notes are required to submit the inspection.",
+                code="required",
+            )
+        return value
 
 
 class BaseInspectionResultFormSet(BaseModelFormSet):

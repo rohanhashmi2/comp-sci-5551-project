@@ -21,19 +21,12 @@
         <span class="iq-queue__action">
             {% if inspection.status == "SCHEDULED" %}
                 <a href="{% url 'inspections:conduct' inspection.pk %}" class="btn btn-outline-primary btn-sm">Conduct</a>
-            {% else %}
-                {% comment %}
-                    Story 9 replaces this marker with the submit action.
-                    An IN_PROGRESS inspection has no way to reach COMPLETED
-                    today — transitions.py has only the SCHEDULED to
-                    IN_PROGRESS entry. Story 9 adds the IN_PROGRESS to
-                    COMPLETED transition, a correction deadline, and
-                    Ticket creation. Whether the submit control lives here
-                    or on the conduct form is Story 9's decision; if it
-                    lives here, replace this marker with a button to the
-                    submit view.
-                {% endcomment %}
-                <span class="iq-queue__done">Recorded</span>
+            {% elif inspection.status == "IN_PROGRESS" %}
+                <a href="{% url 'inspections:submit' inspection.pk %}" class="btn btn-outline-primary btn-sm">Submit</a>
+            {% elif inspection.status == "COMPLETED" %}
+                <span class="iq-chip">Completed</span>
+            {% elif inspection.status == "RE_INSPECTION_SCHEDULED" %}
+                <span class="iq-chip">Re-inspection scheduled</span>
             {% endif %}
         </span>
     </li>

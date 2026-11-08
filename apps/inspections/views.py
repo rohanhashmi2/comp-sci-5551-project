@@ -15,6 +15,7 @@ from .forms import (
     BaseInspectionResultFormSet,
     InspectionResultForm,
     InspectionScheduleForm,
+    InspectionSubmitForm,
 )
 from .models import ChecklistItem, Inspection, InspectionResult
 from apps.tickets.models import Ticket
@@ -123,22 +124,85 @@ class InspectionConductView(LoginRequiredMixin, InspectorRequiredMixin, View):
                     outcome=form.cleaned_data["outcome"],
                     comment=form.cleaned_data["comment"],
                     photo=form.cleaned_data["photo"],
-                    deadline=form.cleaned_data["deadline"]
+                    deadline=form.cleaned_data["deadline"],
                 )
 
                 if result.outcome == InspectionResult.Outcome.FAIL:
                     Ticket.objects.create(
-                    inspection=inspection,
-                    inspection_result=result,
-                    store=inspection.store,
-                    created_by=request.user,
-                    title=f"Failed Inspection Item: {item.code}",
-                    description=result.comment,
-                )
-                
+                        inspection=inspection,
+                        inspection_result=result,
+                        store=inspection.store,
+                        created_by=request.user,
+                        title=f"Failed Inspection Item: {item.code}",
+                        description=result.comment,
+                    )
+
             transitions.apply(inspection, "begin")
             inspection.started_at = timezone.now()
             inspection.save(update_fields=["status", "started_at"])
 
         messages.success(request, "Inspection recorded.")
+        return redirect("accounts:inspector_dashboard")
+
+
+class InspectionSubmitView(LoginRequiredMixin, InspectorRequiredMixin, View):
+    """Terminal step: inspector adds closing notes and marks COMPLETED.
+
+    The checklist results and any Tickets are already created by
+    ``InspectionConductView.post``, which lands the inspection at
+    IN_PROGRESS. This view only advances the status and records the
+    inspector's overall assessment. Rejects on any status other than
+    IN_PROGRESS; a repeat submit on a COMPLETED row keeps the original
+    ``completed_at`` and ``notes`` unchanged.
+    """
+
+    template_name = "inspections/inspection_submit.html"
+
+    def _get_inspection(self):
+        return get_object_or_404(Inspection, pk=self.kwargs["pk"])
+
+    def _reject_if_not_in_progress(self, request, inspection):
+        if inspection.status == Inspection.Status.COMPLETED:
+            messages.error(request, "This inspection has already been submitted.")
+            return redirect("accounts:inspector_dashboard")
+        if inspection.status != Inspection.Status.IN_PROGRESS:
+            messages.error(
+                request,
+                "This inspection cannot be submitted in its current state.",
+            )
+            return redirect("accounts:inspector_dashboard")
+        return None
+
+    def get(self, request, *args, **kwargs):
+        inspection = self._get_inspection()
+        rejected = self._reject_if_not_in_progress(request, inspection)
+        if rejected is not None:
+            return rejected
+        return render(
+            request,
+            self.template_name,
+            {"inspection": inspection, "form": InspectionSubmitForm()},
+        )
+
+    def post(self, request, *args, **kwargs):
+        inspection = self._get_inspection()
+        rejected = self._reject_if_not_in_progress(request, inspection)
+        if rejected is not None:
+            return rejected
+
+        form = InspectionSubmitForm(request.POST)
+        if not form.is_valid():
+            return render(
+                request,
+                self.template_name,
+                {"inspection": inspection, "form": form},
+            )
+
+        with transaction.atomic():
+            transitions.apply(inspection, "submit")
+            inspection.notes = form.cleaned_data["notes"]
+            inspection.completed_at = timezone.now()
+            inspection.save(update_fields=["status", "notes", "completed_at"])
+
+        messages.success(request, "Inspection submitted.")
         return redirect("accounts:inspector_dashboard")

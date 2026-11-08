@@ -6,10 +6,12 @@ in place according to the ``_TRANSITIONS`` table and raises
 the caller runs the save inside the same atomic block as any other
 writes.
 
-Stories that extend the table:
-    - Story 7 adds ("IN_PROGRESS", "submit") → "COMPLETED".
-    - Story 10 adds ("COMPLETED", "schedule_follow_up") →
-      "RE_INSPECTION_SCHEDULED".
+The table today reflects the stories currently built:
+    (SCHEDULED,   "begin")  → IN_PROGRESS    (Story 6)
+    (IN_PROGRESS, "submit") → COMPLETED      (Story 25)
+
+Story 15 adds ``(COMPLETED, "schedule_follow_up") →
+RE_INSPECTION_SCHEDULED`` when that work lands.
 """
 
 
@@ -19,6 +21,7 @@ class InvalidTransition(Exception):  # noqa: N818  (design-notes name)
 
 _TRANSITIONS = {
     ("SCHEDULED", "begin"): "IN_PROGRESS",
+    ("IN_PROGRESS", "submit"): "COMPLETED",
 }
 
 
