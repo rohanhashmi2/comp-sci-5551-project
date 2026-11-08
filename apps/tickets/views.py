@@ -28,6 +28,31 @@ class OwnerTicketListView(LoginRequiredMixin, ListView):
         )
 
 
+class EvidenceReviewQueueView(LoginRequiredMixin, InspectorRequiredMixin, ListView):
+    """Inspector's queue of pending evidence awaiting review.
+
+    Oldest pending first so the queue reads as "what has been sitting
+    longest". ``.order_by`` is explicit even though ``Evidence.Meta``
+    already orders by ``submitted_at`` — states the view's intent at
+    the call site.
+    """
+
+    model = Evidence
+    template_name = "tickets/evidence_review_queue.html"
+    context_object_name = "evidence_list"
+
+    def get_queryset(self):
+        return (
+            Evidence.objects.visible_to(self.request.user)
+            .filter(review_status=Evidence.ReviewStatus.PENDING)
+            .select_related(
+                "ticket__store",
+                "ticket__inspection_result__checklist_item",
+            )
+            .order_by("submitted_at")
+        )
+
+
 def _review_prefix(evidence):
     return f"review-{evidence.pk}"
 

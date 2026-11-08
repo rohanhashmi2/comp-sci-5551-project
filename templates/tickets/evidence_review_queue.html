@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Evidence awaiting review — InspectIQ{% endblock %}
+
+{% block content %}
+<header class="iq-page-head">
+    <h1>Evidence awaiting review</h1>
+</header>
+
+{% if evidence_list %}
+<ul class="iq-queue">
+    {% for evidence in evidence_list %}
+    {% with ticket=evidence.ticket item=evidence.ticket.inspection_result.checklist_item store=evidence.ticket.store %}
+    <li>
+        <div class="iq-queue__site">
+            <p class="iq-queue__store">{{ store.name }}</p>
+            <p class="iq-queue__address">{{ store.address|linebreaksbr }}</p>
+        </div>
+        <span class="iq-queue__when">
+            {{ evidence.submitted_at|date:"Y-m-d H:i" }}
+            <br>
+            <small class="iq-mono">Waiting {{ evidence.submitted_at|timesince }}</small>
+        </span>
+        <span class="iq-queue__status">
+            <span class="iq-mono">{{ item.code }}</span>
+            <br>
+            <small>{{ item.title }}</small>
+        </span>
+        <span class="iq-queue__action">
+            <a href="{% url 'tickets:detail' ticket.pk %}#evidence"
+               class="btn btn-outline-primary btn-sm">Review</a>
+        </span>
+    </li>
+    {% endwith %}
+    {% endfor %}
+</ul>
+{% else %}
+<div class="iq-empty">
+    <p class="iq-empty__headline">No evidence awaiting review.</p>
+    <p class="iq-empty__sub">Submissions from store owners will appear here when they arrive.</p>
+</div>
+{% endif %}
+
+<p class="iq-foot-actions">
+    <a href="{% url 'accounts:inspector_dashboard' %}">Dashboard</a>
+</p>
+{% endblock %}
