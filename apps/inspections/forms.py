@@ -53,8 +53,8 @@ class InspectionResultForm(forms.ModelForm):
 
     photo = forms.ImageField(required=False)
 
-    deadline = forms.DateTimeField(
-        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}), required=False
+    deadline = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date"}), required=False
     )
 
     class Meta:
@@ -82,7 +82,7 @@ class InspectionResultForm(forms.ModelForm):
                 self.add_error("photo", "A photo is required when an item fails.")
 
             if deadline:
-                if deadline <= timezone.now():
+                if deadline <= timezone.localdate():
                     self.add_error(
                         "deadline", "Deadline must be scheduled in the future."
                     )

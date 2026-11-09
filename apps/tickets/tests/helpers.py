@@ -60,7 +60,7 @@ def make_inspection(store, items, outcomes, *, inspector, days_ago=1):
             outcome=outcome,
             comment=f"{item.title} not met.",
             photo=make_image(f"{item.code}.png"),
-            deadline=timezone.now() + timedelta(days=14),
+            deadline=timezone.localdate() + timedelta(days=14),
         )
         Ticket.objects.create(
             inspection=inspection,

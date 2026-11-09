@@ -308,6 +308,7 @@ form textarea:focus-visible {
     border-bottom: 1px solid var(--iq-rule-faint);
     display: flex;
     justify-content: space-between;
+    align-items: center;
     gap: 20px;
     flex-wrap: wrap;
 }
@@ -732,6 +733,20 @@ form textarea:focus-visible {
     margin-bottom: 4px;
 }
 .iq-evidence__note { margin: 8px 0 0 0; font-size: 14px; }
+.iq-evidence__reply {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--iq-rule-faint);
+}
+.iq-evidence__reply-label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--iq-ink-60);
+    margin-bottom: 2px;
+}
 .iq-evidence__form {
     margin-top: 16px;
     padding-top: 16px;

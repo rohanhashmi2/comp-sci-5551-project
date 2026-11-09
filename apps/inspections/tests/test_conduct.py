@@ -35,8 +35,8 @@ def _formset_post_data(outcomes):
     ``InspectionResultForm.clean`` requires since Stories 7–9. PASS and
     NOT_APPLICABLE rows carry only an outcome.
     """
-    deadline = timezone.localtime(timezone.now() + timedelta(days=14))
-    deadline_str = deadline.strftime("%Y-%m-%dT%H:%M")
+    deadline = timezone.localdate() + timedelta(days=14)
+    deadline_str = deadline.strftime("%Y-%m-%d")
     data = {
         "form-TOTAL_FORMS": str(len(outcomes)),
         "form-INITIAL_FORMS": "0",
