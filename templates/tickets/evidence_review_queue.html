@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load deadlines %}
 
 {% block title %}Evidence awaiting review — InspectIQ{% endblock %}
 
@@ -19,7 +20,7 @@
         <span class="iq-queue__when">
             {{ evidence.submitted_at|date:"Y-m-d H:i" }}
             <br>
-            <small class="iq-mono">Waiting {{ evidence.submitted_at|timesince }}</small>
+            <small class="iq-mono">Waiting {{ evidence.submitted_at|waiting_since }}</small>
         </span>
         <span class="iq-queue__status">
             <span class="iq-mono">{{ item.code }}</span>

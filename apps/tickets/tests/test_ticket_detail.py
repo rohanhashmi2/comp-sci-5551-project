@@ -7,7 +7,7 @@ from django.utils.dateformat import format as date_format
 
 from apps.inspections.models import Inspection, InspectionResult
 from apps.stores.models import Store
-from apps.tickets.models import Ticket
+from apps.tickets.models import Evidence, Ticket
 
 from .helpers import make_image
 
@@ -38,8 +38,7 @@ def test_ac11_01_ticket_detail_shows_violation(logged_in_owner, ticket):
     assert result.checklist_item.title in content
     assert result.comment in content
     assert result.photo.url in content
-    local_deadline = timezone.localtime(result.deadline)
-    assert date_format(local_deadline, "l, j F Y · H:i") in content
+    assert date_format(result.deadline, "l, j F Y") in content
 
 
 @pytest.mark.django_db
@@ -129,7 +128,7 @@ def test_conducted_failure_opens_as_ticket_detail(client, inspector, owner, item
     inspection = Inspection.objects.create(
         store=store, scheduled_for=timezone.now() + timedelta(days=1)
     )
-    deadline = timezone.localtime(timezone.now() + timedelta(days=7))
+    deadline = timezone.localdate() + timedelta(days=7)
     data = {
         "form-TOTAL_FORMS": str(len(items)),
         "form-INITIAL_FORMS": "0",
@@ -142,7 +141,7 @@ def test_conducted_failure_opens_as_ticket_detail(client, inspector, owner, item
     data["form-0-outcome"] = "FAIL"
     data["form-0-comment"] = "Walk-in cooler at 48°F."
     data["form-0-photo"] = make_image("cooler.png")
-    data["form-0-deadline"] = deadline.strftime("%Y-%m-%dT%H:%M")
+    data["form-0-deadline"] = deadline.strftime("%Y-%m-%d")
 
     client.force_login(inspector)
     client.post(reverse("inspections:conduct", args=[inspection.pk]), data=data)
@@ -156,3 +155,59 @@ def test_conducted_failure_opens_as_ticket_detail(client, inspector, owner, item
     assert response.status_code == 200
     assert "Walk-in cooler at 48°F." in response.content.decode()
     assert b"7 DAYS REMAINING" in response.content
+
+
+@pytest.mark.django_db
+def test_letterhead_label_is_to_for_owner(logged_in_owner, ticket):
+    """Supporting test: an owner viewing a ticket sees the letterhead
+    addressed to them, labelled "To"."""
+    response = logged_in_owner.get(_detail_url(ticket))
+    content = response.content.decode()
+    assert "<dt>To</dt>" in content
+    assert "<dt>For</dt>" not in content
+
+
+@pytest.mark.django_db
+def test_letterhead_label_is_for_for_inspector(logged_in_inspector, ticket):
+    """Supporting test: an inspector viewing a ticket sees the owner's
+    email in the letterhead but labelled "For" — the letter is addressed
+    to the owner, not to the inspector reading it."""
+    response = logged_in_inspector.get(_detail_url(ticket))
+    content = response.content.decode()
+    assert "<dt>For</dt>" in content
+    assert "<dt>To</dt>" not in content
+    # The owner's email still appears — only the label changes.
+    assert ticket.store.owner.email in content
+
+
+@pytest.mark.django_db
+def test_rejected_evidence_separates_owner_note_from_inspector_reply(
+    logged_in_owner, ticket, owner
+):
+    """Supporting test: when evidence is rejected with a comment, the
+    owner's original note and the inspector's reply render as visibly
+    separate blocks, not one run-on paragraph. The reply uses the
+    .iq-evidence__reply block introduced for this fix."""
+    Evidence.objects.create(
+        ticket=ticket,
+        submitted_by=owner,
+        photo=make_image("fix.png"),
+        note="ok fixed",
+        review_status=Evidence.ReviewStatus.REJECTED,
+        reviewer_comment="Photo does not show the thermometer reading.",
+    )
+
+    response = logged_in_owner.get(_detail_url(ticket))
+    content = response.content.decode()
+
+    assert "ok fixed" in content
+    assert "Photo does not show the thermometer reading." in content
+    # Reply is wrapped in its own labelled block (structural check, no
+    # English copy assertion).
+    assert "iq-evidence__reply" in content
+    # The inspector's text sits inside the reply block, not alongside
+    # the owner's note in the same paragraph.
+    reply_start = content.index("iq-evidence__reply")
+    owner_note_start = content.index("ok fixed")
+    reply_body_start = content.index("Photo does not show the thermometer reading.")
+    assert owner_note_start < reply_start < reply_body_start

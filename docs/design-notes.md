@@ -892,20 +892,25 @@ One-line reference. If none of these fits what you're building, add a new one in
 |----------------------|-------------------------------------------------------------------------------------------|
 | `.iq-strip`          | The ink header strip at the top of every page. Lives in `base.html`'s `{% block navbar %}`. |
 | `.iq-container`      | The main content column. Max 960px, flush-left. Wrap page content inside `main.iq-container`. |
-| `.iq-letterhead`     | The `<dl>`-based FROM/TO/DATE/SUBJECT block at the top of the owner dashboard and (in Story 11) the ticket detail page. |
+| `.iq-page-head`      | Header row above a page's main content: `<h1>` on the left, an optional action button or chip on the right. Flex row, centre-aligned. Used on both dashboards, the ticket detail page, the review queue, the store history page, and the conduct form. |
+| `.iq-letterhead`     | The `<dl>`-based FROM/TO/DATE/SUBJECT block at the top of the owner dashboard and (in Story 11) the ticket detail page. The TO label becomes FOR when an inspector views a ticket — the owner is still the addressee, the inspector is reading a notification, not receiving one. |
 | `.iq-standing`       | The `<ul>` of per-store status lines on the owner dashboard. Each `<li>` carries a store on the left, a mono status on the right. Status gets `.iq-standing__state--open` (stamp colour) when something is unresolved. |
-| `.iq-queue`          | The `<ul>` of inspection rows on the inspector dashboard, with four slots per row (when / store+address / status / action). In Story 10 the ticket list reuses this layout. |
+| `.iq-queue`          | The `<ul>` of inspection rows on the inspector dashboard, with four slots per row (when / store+address / status / action). Story 10's owner ticket list and Story 26's evidence review queue reuse this layout. |
 | `.iq-empty`          | Empty-state block (bordered top-and-bottom, serif headline, muted sub). See §14.5 voice rules. |
 | `.iq-error-banner`   | Stamp-bordered banner at the top of a form that failed validation. Contains an `<h2>` and a list of anchor links to the specific rows that need attention. |
+| `.iq-messages`       | Wrapper around Django's flash messages inside `base.html`'s `{% block messages %}`. Holds Bootstrap `.alert` entries whenever a view sets `messages.success` / `messages.error` / `messages.info`. Renders above page content. |
 | `.iq-row-card`       | A single row on the conduct form. Modifiers: `.iq-row-card--error` (thick stamp left border + row-top strip), `.iq-row-card--recorded` (title muted, standard details collapsed). |
+| `.iq-row-code` / `.iq-row-title` / `.iq-row-standard` | Parts of a `.iq-row-card` that also surface standalone on the ticket detail page's violation header and in the review queue row. `.iq-row-code` is the mono-uppercase checklist code (e.g. `FS-01`); `.iq-row-title` is the human-readable title alongside it; `.iq-row-standard` wraps the `<details>` "Show standard" disclosure with the standard's full text. |
 | `.iq-outcome-btn`    | The three outcome buttons inside `.iq-outcome`. Variants `--pass` / `--fail` / `--na` style the checked state. |
 | `.iq-deadline`       | Bordered block titled "DEADLINE" with a serif date inside. **The only place in the product a date renders in serif.** See §14.5 for use. |
 | `.iq-chip`           | Inline mono-uppercase status label. Modifier `.iq-chip--stamp` for stamp colour. See §14.5 for rules. |
 | `.iq-section-title`  | A section heading styled as uppercase mono with a 2px rule beneath it. For subsidiary sections on a page. |
-| `.iq-form-column`    | Form-only pages (login, register, add store, schedule inspection). 480px max-width, flush-left. |
+| `.iq-form-column`    | Form-only pages (login, register, add store, schedule inspection, submit inspection). 480px max-width, flush-left. |
 | `.iq-violations` / `.iq-violation` | The `<ol>` of failed items on the ticket detail page (Story 11). Each `<li>` carries code, title, a resolved/unresolved chip, the inspector's comment and photo. Rule-separated, not carded. |
 | `.iq-evidence`       | The `<ul>` of evidence rows under a violation (Stories 12–13): thumbnail (`.iq-photo--thumb`), submitted time, review chip, note. `.iq-evidence__form` holds the owner's upload form or the inspector's review form. |
+| `.iq-evidence__reply` | Container wrapping a reviewer's response beneath something a user submitted — currently the inspector's comment under a piece of evidence on the ticket detail page. Carries a top-rule separator and a sub-label (`.iq-evidence__reply-label`, mono-uppercase) so the response reads in a visibly different voice from the submission above it. Reach for this whenever one party is replying to another's submission and both texts have to appear in the same card: rejected evidence is the canonical case, where the reviewer's "why not" is the most consequential text on the page and must not read as a continuation of the owner's note. |
 | `.iq-photo`          | An inspection or evidence photo. Max 320px tall; `--thumb` modifier for 160×120 evidence thumbnails. |
+| `.iq-foot-actions`   | Footer navigation line at the bottom of a page: plain-text links separated by middle dots (`<span aria-hidden="true">·</span>`). No buttons — the dots do the visual work. Used at the end of nearly every page to return to the dashboard or reach related pages (inspection history, store list, add store, review queue). |
 
 Utilities also in the sheet: `.iq-section-rule` (horizontal rule), `.iq-sr-only` (visually hidden but screen-reader readable), `.iq-mono` (mono+uppercase inline).
 

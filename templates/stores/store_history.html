@@ -38,6 +38,14 @@
                 {% endfor %}
             </td>
         </tr>
+        {% if inspection.notes %}
+        <tr class="iq-history-notes">
+            <td colspan="3">
+                <span class="iq-mono">Inspector's notes</span>
+                <span class="text-muted">{{ inspection.notes|linebreaksbr }}</span>
+            </td>
+        </tr>
+        {% endif %}
     {% endfor %}
     </tbody>
 </table>

@@ -197,3 +197,39 @@ def test_history_links_from_store_list_and_owner_dashboard(
     client.force_login(owner)
     dashboard = client.get(reverse("accounts:owner_dashboard"))
     assert _history_url(store).encode() in dashboard.content
+
+
+@pytest.mark.django_db
+def test_history_shows_inspection_notes_when_present(
+    client, inspector, owner, store, items
+):
+    """Supporting test: an inspection's closing notes appear on the
+    history page under the inspection row, readable by both roles."""
+    inspection = make_inspection(
+        store, items, [FAIL, PASS, PASS, PASS], inspector=inspector
+    )
+    inspection.notes = "Walk-in cooler recalibrated on site. Return visit scheduled."
+    inspection.save(update_fields=["notes"])
+
+    for user in (inspector, owner):
+        client.force_login(user)
+        response = client.get(_history_url(store))
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert inspection.notes in content
+        assert "iq-history-notes" in content
+
+
+@pytest.mark.django_db
+def test_history_hides_notes_row_when_empty(client, inspector, owner, store, items):
+    """Supporting test: an inspection with no notes does not render the
+    notes subrow. Structural check, no assertion on English copy."""
+    inspection = make_inspection(
+        store, items, [PASS, PASS, PASS, PASS], inspector=inspector
+    )
+    assert inspection.notes == ""
+
+    client.force_login(owner)
+    response = client.get(_history_url(store))
+    assert response.status_code == 200
+    assert b"iq-history-notes" not in response.content

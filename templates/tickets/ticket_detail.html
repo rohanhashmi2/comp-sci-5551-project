@@ -8,7 +8,7 @@
 <dl class="iq-letterhead">
     <dt>From</dt>
     <dd>InspectIQ Food Safety</dd>
-    <dt>To</dt>
+    <dt>{% if request.user.role == "INSPECTOR" %}For{% else %}To{% endif %}</dt>
     <dd>{{ store.owner.email }}</dd>
     <dt>Date</dt>
     <dd>{{ ticket.created_at|date:"l, j F Y" }}</dd>
@@ -26,7 +26,7 @@
 
 <div class="iq-deadline">
     <span class="iq-deadline__label">Deadline</span>
-    <p class="iq-deadline__date">{{ result.deadline|date:"l, j F Y · H:i" }}</p>
+    <p class="iq-deadline__date">{{ result.deadline|date:"l, j F Y" }}</p>
     {% if ticket.status == "OPEN" %}
         <span class="iq-deadline__sub">{{ result.deadline|days_remaining }}</span>
     {% endif %}
@@ -72,9 +72,10 @@
                     <p class="iq-evidence__note">{{ evidence.note|linebreaksbr }}</p>
                 {% endif %}
                 {% if evidence.reviewer_comment %}
-                    <p class="iq-evidence__note">
-                        <span class="iq-mono">Inspector</span> {{ evidence.reviewer_comment|linebreaksbr }}
-                    </p>
+                <div class="iq-evidence__reply">
+                    <span class="iq-evidence__reply-label">Inspector's reply</span>
+                    <p class="iq-evidence__note">{{ evidence.reviewer_comment|linebreaksbr }}</p>
+                </div>
                 {% endif %}
 
                 {% if evidence.review_form %}
