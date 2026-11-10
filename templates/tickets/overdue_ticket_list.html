@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load deadlines %}
+
+{% block title %}Overdue tickets — InspectIQ{% endblock %}
+
+{% block content %}
+<header class="iq-page-head">
+    <h1>Overdue tickets</h1>
+</header>
+
+{% if tickets %}
+<ul class="iq-queue">
+    {% for ticket in tickets %}
+    {% with item=ticket.inspection_result.checklist_item store=ticket.store %}
+    <li>
+        <div class="iq-queue__site">
+            <p class="iq-queue__store">{{ store.name }}</p>
+            <p class="iq-queue__address">{{ store.address|linebreaksbr }}</p>
+        </div>
+        <span class="iq-queue__when">
+            Deadline {{ ticket.deadline|date:"Y-m-d" }}
+            <br>
+            <span class="iq-chip iq-chip--stamp">{{ ticket.deadline|days_remaining }}</span>
+        </span>
+        <span class="iq-queue__status">
+            <span class="iq-mono">{{ item.code }}</span>
+            <br>
+            <small>{{ item.title }}</small>
+        </span>
+        <span class="iq-queue__action">
+            <a href="{% url 'tickets:detail' ticket.pk %}" class="btn btn-outline-primary btn-sm">Ticket #{{ ticket.pk }}</a>
+        </span>
+    </li>
+    {% endwith %}
+    {% endfor %}
+</ul>
+{% else %}
+<div class="iq-empty">
+    <p class="iq-empty__headline">No tickets are overdue.</p>
+    <p class="iq-empty__sub">Open tickets appear here once their correction deadline has passed.</p>
+</div>
+{% endif %}
+
+<p class="iq-foot-actions">
+    <a href="{% url 'accounts:inspector_dashboard' %}">Dashboard</a>
+</p>
+{% endblock %}

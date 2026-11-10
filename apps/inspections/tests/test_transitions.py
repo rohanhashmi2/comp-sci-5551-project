@@ -43,3 +43,15 @@ def test_transitions_rejects_submit_from_completed():
     inspection = _unsaved(Inspection.Status.COMPLETED)
     with pytest.raises(transitions.InvalidTransition):
         transitions.apply(inspection, "submit")
+
+
+def test_transitions_completed_to_re_inspection_scheduled_via_schedule_follow_up():
+    inspection = _unsaved(Inspection.Status.COMPLETED)
+    transitions.apply(inspection, "schedule_follow_up")
+    assert inspection.status == Inspection.Status.RE_INSPECTION_SCHEDULED
+
+
+def test_transitions_rejects_schedule_follow_up_from_in_progress():
+    inspection = _unsaved(Inspection.Status.IN_PROGRESS)
+    with pytest.raises(transitions.InvalidTransition):
+        transitions.apply(inspection, "schedule_follow_up")

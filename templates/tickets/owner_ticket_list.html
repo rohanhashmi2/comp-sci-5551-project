@@ -1,9 +1,24 @@
 {% extends "base.html" %}
-{% load django_bootstrap5 %}
+{% load django_bootstrap5 deadlines %}
 
 
 {% block content %}
 <h1>Open Tickets</h1>
+
+<p class="iq-sort" aria-label="Sort tickets">
+    Sort by:
+    {% if sort == "received" %}
+        <strong aria-current="true">Date received</strong>
+    {% else %}
+        <a href="?sort=received">Date received</a>
+    {% endif %}
+    <span aria-hidden="true">·</span>
+    {% if sort == "deadline" %}
+        <strong aria-current="true">Deadline</strong>
+    {% else %}
+        <a href="?sort=deadline">Deadline</a>
+    {% endif %}
+</p>
 
 {% for ticket in tickets %}
     <div class="card mb-3">
@@ -18,14 +33,16 @@
 
             <p>
                 Status: {{ ticket.get_status_display }}
+                {% if ticket.is_overdue %}<span class="iq-chip iq-chip--stamp">Overdue</span>{% endif %}
             </p>
 
             <p>
-                Created: {{ ticket.created_at }}
+                Received: {{ ticket.created_at|date:"Y-m-d H:i" }}
             </p>
 
             <p>
-                Deadline: {{ ticket.inspection_result.deadline }}
+                Deadline: {{ ticket.inspection_result.deadline|date:"Y-m-d" }}
+                · {{ ticket.inspection_result.deadline|days_remaining }}
             </p>
 
             <div>

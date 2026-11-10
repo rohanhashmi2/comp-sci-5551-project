@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from apps.inspections.models import Inspection, InspectionResult
 
@@ -21,6 +22,13 @@ class TicketManager(models.Manager):
         if user.role == "OWNER":
             return self.filter(store__owner=user)
         return self.none()
+
+    def overdue(self):
+        """Open tickets whose correction deadline is before today (Story 17)."""
+        return self.filter(
+            status=Ticket.Status.OPEN,
+            inspection_result__deadline__lt=timezone.localdate(),
+        )
 
 
 class Ticket(models.Model):
@@ -75,6 +83,13 @@ class Ticket(models.Model):
     @property
     def deadline(self):
         return self.inspection_result.deadline
+
+    @property
+    def is_overdue(self):
+        """Dashboard flag only; no state change (design-notes assumption 9)."""
+        return (
+            self.status == Ticket.Status.OPEN and self.deadline < timezone.localdate()
+        )
 
 
 class EvidenceManager(models.Manager):

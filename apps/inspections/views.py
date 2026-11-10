@@ -16,6 +16,7 @@ from .forms import (
     InspectionResultForm,
     InspectionScheduleForm,
     InspectionSubmitForm,
+    ReinspectionScheduleForm,
 )
 from .models import ChecklistItem, Inspection, InspectionResult
 from apps.tickets.models import Ticket
@@ -205,4 +206,76 @@ class InspectionSubmitView(LoginRequiredMixin, InspectorRequiredMixin, View):
             inspection.save(update_fields=["status", "notes", "completed_at"])
 
         messages.success(request, "Inspection submitted.")
+        return redirect("accounts:inspector_dashboard")
+
+
+class ReinspectionCreateView(LoginRequiredMixin, InspectorRequiredMixin, View):
+    """Story 15: schedule a follow-up visit for a completed inspection.
+
+    Allowed only while the inspection is COMPLETED and still has an open
+    ticket, i.e. the owner's evidence has not yet resolved a violation.
+    The follow-up is a new SCHEDULED Inspection of the same store linked
+    through ``previous_inspection``; the original moves to
+    RE_INSPECTION_SCHEDULED in the same transaction.
+    """
+
+    template_name = "inspections/reinspection_form.html"
+
+    def _get_inspection(self):
+        return get_object_or_404(Inspection, pk=self.kwargs["pk"])
+
+    def _reject_if_not_eligible(self, request, inspection):
+        if inspection.status != Inspection.Status.COMPLETED:
+            messages.error(
+                request,
+                "A re-inspection cannot be scheduled for this inspection "
+                "in its current state.",
+            )
+            return redirect("accounts:inspector_dashboard")
+        if not inspection.tickets.filter(status=Ticket.Status.OPEN).exists():
+            messages.error(
+                request,
+                "This inspection has no open tickets, so no re-inspection is needed.",
+            )
+            return redirect("accounts:inspector_dashboard")
+        return None
+
+    def _render(self, request, inspection, form):
+        return render(
+            request,
+            self.template_name,
+            {
+                "inspection": inspection,
+                "open_tickets": inspection.tickets.filter(status=Ticket.Status.OPEN),
+                "form": form,
+            },
+        )
+
+    def get(self, request, *args, **kwargs):
+        inspection = self._get_inspection()
+        rejected = self._reject_if_not_eligible(request, inspection)
+        if rejected is not None:
+            return rejected
+        return self._render(request, inspection, ReinspectionScheduleForm())
+
+    def post(self, request, *args, **kwargs):
+        inspection = self._get_inspection()
+        rejected = self._reject_if_not_eligible(request, inspection)
+        if rejected is not None:
+            return rejected
+
+        form = ReinspectionScheduleForm(request.POST)
+        if not form.is_valid():
+            return self._render(request, inspection, form)
+
+        with transaction.atomic():
+            transitions.apply(inspection, "schedule_follow_up")
+            inspection.save(update_fields=["status"])
+            form.instance.store = inspection.store
+            form.instance.previous_inspection = inspection
+            form.save()
+
+        messages.success(
+            request, f"Re-inspection scheduled for {inspection.store.name}."
+        )
         return redirect("accounts:inspector_dashboard")

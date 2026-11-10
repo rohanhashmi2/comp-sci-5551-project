@@ -26,6 +26,25 @@ class InspectionScheduleForm(forms.ModelForm):
         return value
 
 
+class ReinspectionScheduleForm(forms.ModelForm):
+    """Date of a follow-up visit (Story 15).
+
+    The store and the parent inspection come from the inspection being
+    followed up, so the date is the only field. Shares the future-date
+    rule with the original scheduling form.
+    """
+
+    class Meta:
+        model = Inspection
+        fields = ("scheduled_for",)
+        labels = {"scheduled_for": "Re-inspection date"}
+        widgets = {
+            "scheduled_for": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        }
+
+    clean_scheduled_for = InspectionScheduleForm.clean_scheduled_for
+
+
 class InspectionResultForm(forms.ModelForm):
     """One row of the conducting formset.
 

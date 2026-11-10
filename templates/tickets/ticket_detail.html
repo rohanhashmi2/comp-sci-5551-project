@@ -105,6 +105,10 @@
 </div>
 
 <p class="iq-foot-actions">
+    {% if request.user.role == "INSPECTOR" and ticket.status == "OPEN" and ticket.inspection.status == "COMPLETED" %}
+        <a href="{% url 'inspections:reinspect' ticket.inspection.pk %}">Schedule re-inspection</a>
+        <span aria-hidden="true">·</span>
+    {% endif %}
     <a href="{% url 'stores:history' store.pk %}">Inspection history</a>
     <span aria-hidden="true">·</span>
     <a href="{% url 'home' %}">Dashboard</a>
