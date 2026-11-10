@@ -3,6 +3,13 @@
 {% block title %}Inspector dashboard — InspectIQ{% endblock %}
 
 {% block content %}
+{% if overdue_ticket_count %}
+<div class="alert alert-danger" role="alert">
+    <a href="{% url 'tickets:overdue' %}" class="alert-link">Overdue tickets ({{ overdue_ticket_count }})</a>
+    — these stores have passed their correction deadline.
+</div>
+{% endif %}
+
 {% if inspections %}
 <header class="iq-page-head">
     <h1>Today</h1>
@@ -15,6 +22,9 @@
         <div class="iq-queue__site">
             <p class="iq-queue__store">{{ inspection.store.name }}</p>
             <p class="iq-queue__address">{{ inspection.store.address|linebreaksbr }}</p>
+            {% if inspection.previous_inspection %}
+            <p class="iq-queue__address"><span class="iq-chip">Re-inspection</span> of the {{ inspection.previous_inspection.scheduled_for|date:"Y-m-d" }} visit</p>
+            {% endif %}
         </div>
         <span class="iq-queue__when">{{ inspection.scheduled_for|date:"Y-m-d H:i" }}</span>
         <span class="iq-queue__status">{{ inspection.get_status_display }}</span>
@@ -23,6 +33,8 @@
                 <a href="{% url 'inspections:conduct' inspection.pk %}" class="btn btn-outline-primary btn-sm">Conduct</a>
             {% elif inspection.status == "IN_PROGRESS" %}
                 <a href="{% url 'inspections:submit' inspection.pk %}" class="btn btn-outline-primary btn-sm">Submit</a>
+            {% elif inspection.status == "COMPLETED" and inspection.open_ticket_count %}
+                <a href="{% url 'inspections:reinspect' inspection.pk %}" class="btn btn-outline-primary btn-sm">Schedule re-inspection</a>
             {% elif inspection.status == "COMPLETED" %}
                 <span class="iq-chip">Completed</span>
             {% elif inspection.status == "RE_INSPECTION_SCHEDULED" %}
@@ -46,5 +58,7 @@
     <a href="{% url 'stores:add' %}">Add store</a>
     <span aria-hidden="true">·</span>
     <a href="{% url 'tickets:review_queue' %}">Evidence awaiting review</a>
+    <span aria-hidden="true">·</span>
+    <a href="{% url 'tickets:overdue' %}">Overdue tickets</a>
 </p>
 {% endblock %}

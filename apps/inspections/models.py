@@ -43,6 +43,14 @@ class Inspection(models.Model):
     )
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Story 15: a re-inspection is a new row linked to the visit it follows up.
+    previous_inspection = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="follow_ups",
+    )
 
     objects = InspectionManager()
 

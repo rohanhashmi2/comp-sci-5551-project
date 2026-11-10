@@ -59,7 +59,18 @@ class InspectorDashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["inspections"] = Inspection.objects.visible_to(self.request.user)
+        # open_ticket_count decides whether a completed inspection offers
+        # "Schedule re-inspection" (Story 15).
+        ctx["inspections"] = (
+            Inspection.objects.visible_to(self.request.user)
+            .select_related("store", "previous_inspection")
+            .annotate(
+                open_ticket_count=Count(
+                    "tickets", filter=Q(tickets__status=Ticket.Status.OPEN)
+                )
+            )
+        )
+        ctx["overdue_ticket_count"] = Ticket.objects.overdue().count()  # Story 17
         return ctx
 
 

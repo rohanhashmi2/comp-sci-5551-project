@@ -17,14 +17,55 @@ TEMPLATE_NAME = "tickets/ticket_detail.html"
 
 
 class OwnerTicketListView(LoginRequiredMixin, ListView):
+    """The owner's open tickets, sortable by date received or deadline.
+
+    Story 22: ``?sort=received`` (default) lists the newest ticket first;
+    ``?sort=deadline`` lists the earliest deadline first, ties broken by
+    the newest ticket.
+    """
+
     model = Ticket
     template_name = "tickets/owner_ticket_list.html"
     context_object_name = "tickets"
 
+    SORT_ORDERS = {
+        "received": ("-created_at",),
+        "deadline": ("inspection_result__deadline", "-created_at"),
+    }
+
     def get_queryset(self):
-        return Ticket.objects.filter(
-            store__owner=self.request.user,
-            status=Ticket.Status.OPEN,
+        self.sort = self.request.GET.get("sort", "received")
+        return (
+            Ticket.objects.filter(
+                store__owner=self.request.user,
+                status=Ticket.Status.OPEN,
+            )
+            .select_related("store", "inspection_result")
+            .order_by(*self.SORT_ORDERS[self.sort])
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["sort"] = self.sort
+        return ctx
+
+
+class OverdueTicketListView(LoginRequiredMixin, InspectorRequiredMixin, ListView):
+    """Story 17: open tickets past their correction deadline.
+
+    Most overdue first, so the stores that have been silent longest are
+    at the top of the follow-up list.
+    """
+
+    model = Ticket
+    template_name = "tickets/overdue_ticket_list.html"
+    context_object_name = "tickets"
+
+    def get_queryset(self):
+        return (
+            Ticket.objects.overdue()
+            .select_related("store", "inspection_result__checklist_item")
+            .order_by("inspection_result__deadline", "pk")
         )
 
 
