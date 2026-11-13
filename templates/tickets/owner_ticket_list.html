@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% load django_bootstrap5 deadlines %}
 
-
 {% block content %}
-<h1>Open Tickets</h1>
+
+<div class="iq-page-head">
+    <h1>Open Tickets</h1>
+</div>
 
 <p class="iq-sort" aria-label="Sort tickets">
     Sort by:
@@ -12,7 +14,7 @@
     {% else %}
         <a href="?sort=received">Date received</a>
     {% endif %}
-    <span aria-hidden="true">·</span>
+    <span aria-hidden="true"> · </span>
     {% if sort == "deadline" %}
         <strong aria-current="true">Deadline</strong>
     {% else %}
@@ -21,42 +23,58 @@
 </p>
 
 {% for ticket in tickets %}
-    <div class="card mb-3">
-        <div class="card-body">
-            <h3><a href="{% url 'tickets:detail' ticket.pk %}">{{ ticket.title }}</a></h3>
+    <article class="iq-ticket">
+        <div class="iq-ticket__head">
+            <h3>
+                <a href="{% url 'tickets:detail' ticket.pk %}">
+                    {{ ticket.title }}
+                </a>
+            </h3>
 
-            <p>{{ ticket.description }}</p>
-
-            <p>
-                Store: {{ ticket.store.name }}
-            </p>
-
-            <p>
-                Status: {{ ticket.get_status_display }}
-                {% if ticket.is_overdue %}<span class="iq-chip iq-chip--stamp">Overdue</span>{% endif %}
-            </p>
-
-            <p>
-                Received: {{ ticket.created_at|date:"Y-m-d H:i" }}
-            </p>
-
-            <p>
-                Deadline: {{ ticket.inspection_result.deadline|date:"Y-m-d" }}
-                · {{ ticket.inspection_result.deadline|days_remaining }}
-            </p>
-
-            <div>
-                <p>Inspection Photo:</p>
-                    <img
-                    src="{{ ticket.inspection_result.photo.url }}"
-                    alt="Inspection photo"
-                    style="max-width: 500px; height: auto;"
-                    >
-            </div>
+            <span class="iq-chip
+                {% if ticket.is_overdue %}iq-chip--stamp{% endif %}">
+                {{ ticket.get_status_display }}
+                {% if ticket.is_overdue %} · Overdue{% endif %}
+            </span>
         </div>
-    </div>
+
+        <p class="iq-ticket__description">
+            {{ ticket.description }}
+        </p>
+
+        <dl class="iq-letterhead iq-ticket__details">
+            <dt>Store</dt>
+            <dd>{{ ticket.store.name }}</dd>
+
+            <dt>Received</dt>
+            <dd>{{ ticket.created_at|date:"Y-m-d H:i" }}</dd>
+
+            <dt>Deadline</dt>
+            <dd>
+                {{ ticket.inspection_result.deadline|date:"Y-m-d" }}
+                · {{ ticket.inspection_result.deadline|days_remaining }}
+            </dd>
+        </dl>
+
+        {% if ticket.inspection_result.photo %}
+            <div class="iq-ticket__photo">
+                <span class="iq-mono">Inspection Photo</span>
+                <img
+                    class="iq-photo"
+                    src="{{ ticket.inspection_result.photo.url }}"
+                    alt="Inspection photo for {{ ticket.title }}"
+                    loading="lazy"
+                >
+            </div>
+        {% endif %}
+    </article>
 {% empty %}
-    <p>No open tickets.</p>
+    <div class="iq-empty">
+        <h2 class="iq-empty__headline">No open tickets</h2>
+        <p class="iq-empty__sub">
+            There are currently no outstanding tickets for your stores.
+        </p>
+    </div>
 {% endfor %}
 
 {% endblock %}

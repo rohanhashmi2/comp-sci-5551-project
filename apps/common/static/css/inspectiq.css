@@ -796,3 +796,68 @@ form textarea:focus-visible {
     white-space: nowrap;
     border: 0;
 }
+
+
+/* --- Owner ticket list --------------------------------------- */
+
+.iq-sort {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 24px;
+}
+
+.iq-sort strong {
+    color: var(--iq-ink);
+}
+
+.iq-ticket {
+    padding: 20px 0 24px;
+    border-top: 1px solid var(--iq-rule-faint);
+}
+
+.iq-ticket:last-of-type {
+    border-bottom: 1px solid var(--iq-rule-faint);
+}
+
+.iq-ticket__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.iq-ticket__head h3 {
+    margin: 0;
+}
+
+.iq-ticket__description {
+    font-size: 14px;
+    margin: 12px 0;
+    max-width: 720px;
+}
+
+.iq-ticket__details {
+    margin: 16px 0;
+    padding: 12px 0;
+    border-top: 1px solid var(--iq-rule-faint);
+    border-bottom: 1px solid var(--iq-rule-faint);
+}
+
+.iq-ticket__photo {
+    margin-top: 16px;
+}
+
+.iq-ticket__photo .iq-mono {
+    display: block;
+    margin-bottom: 8px;
+}
+
+@media (max-width: 640px) {
+    .iq-ticket__head {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
