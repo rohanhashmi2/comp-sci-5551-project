@@ -179,6 +179,8 @@ def test_owner_ticket_list_flags_overdue_ticket(logged_in_owner, inspection):
 
     response = logged_in_owner.get(reverse("tickets:owner_ticket_list"))
 
+    assert response.status_code == 200
+
     content = response.content.decode()
-    assert content.count(">Overdue</span>") == 1
+    assert content.count("· Overdue") == 1
     assert "OVERDUE — 2 DAYS PAST" in content

@@ -42,7 +42,7 @@
             {{ ticket.description }}
         </p>
 
-        <dl class="iq-letterhead iq-ticket__details">
+        <dl class="iq-ticket__details">
             <dt>Store</dt>
             <dd>{{ ticket.store.name }}</dd>
 
@@ -70,7 +70,7 @@
     </article>
 {% empty %}
     <div class="iq-empty">
-        <h2 class="iq-empty__headline">No open tickets</h2>
+        <p class="iq-empty__headline">No open tickets.</p>
         <p class="iq-empty__sub">
             There are currently no outstanding tickets for your stores.
         </p>

@@ -914,6 +914,14 @@ One-line reference. If none of these fits what you're building, add a new one in
 
 Utilities also in the sheet: `.iq-section-rule` (horizontal rule), `.iq-sr-only` (visually hidden but screen-reader readable), `.iq-mono` (mono+uppercase inline).
 
+`.iq-sort` Displays the ticket-list sorting controls (Date received / Deadline).
+`.iq-ticket` Defines an individual ticket row, including vertical spacing and separator borders.
+`.iq-ticket__head` Lays out the ticket title and status chip.
+`.iq-ticket__description` Styles the ticket's description text.
+`.iq-ticket__details` Displays ticket metadata: store, received date, and correction deadline.
+`.iq-ticket__photo` 	
+Provides spacing and layout for the inspection photo attached to a ticket.
+
 ### 14.5 What your stories will need
 
 **Stories 7 and 8 — comment and photo on `.iq-row-card`**
